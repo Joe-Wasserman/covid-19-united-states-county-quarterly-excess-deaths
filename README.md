@@ -72,6 +72,8 @@ More precisely, the model regresses **total deaths per day** on:
 
 This model can be expressed by the equation:
 
+<img src="README_files/equation-1.png" width="647" />
+
 # Model Performance
 
 Because the COVID-19 pandemic only began partway through March, 2020, we
@@ -84,7 +86,7 @@ Observed and expected deaths in Q1 2020 are highly correlated, r =
 of the counties that were hardest hit early in the pandemic are among
 those with total deaths that most diverge from expected deaths.
 
-![](C:/Users/jwasserman/Documents/covid-19-united-states-county-quarterly-excess-deaths/README_files/figure-gfm/plot%20comparison-1.png)<!-- -->
+![](README_files/plot_comparison-1.png)<!-- -->
 
 # Repository Organization
 
@@ -119,46 +121,46 @@ International License](https://creativecommons.org/licenses/by/4.0/).
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] tinytex_0.34       knitr_1.31         equatiomatic_0.3.0 lme4_1.1-26       
-    ##  [5] Matrix_1.3-2       aweek_1.0.2        lubridate_1.7.10   data.table_1.14.0 
-    ##  [9] tidycensus_0.11.4  forcats_0.5.1      stringr_1.4.0      dplyr_1.0.5       
-    ## [13] purrr_0.3.4        readr_2.0.2        tidyr_1.1.3        tibble_3.1.0      
-    ## [17] ggplot2_3.3.5      tidyverse_1.3.1   
+    ##  [1] texPreview_1.5     tinytex_0.34       knitr_1.31         equatiomatic_0.3.0
+    ##  [5] lme4_1.1-26        Matrix_1.3-2       aweek_1.0.2        lubridate_1.7.10  
+    ##  [9] data.table_1.14.0  tidycensus_0.11.4  forcats_0.5.1      stringr_1.4.0     
+    ## [13] dplyr_1.0.5        purrr_0.3.4        readr_2.0.2        tidyr_1.1.3       
+    ## [17] tibble_3.1.0       ggplot2_3.3.5      tidyverse_1.3.1   
     ## 
     ## loaded via a namespace (and not attached):
     ##   [1] rdocsyntax_0.4.1.9000 minqa_1.2.4           colorspace_2.0-0     
     ##   [4] ellipsis_0.3.1        class_7.3-18          rgdal_1.5-23         
     ##   [7] rprojroot_2.0.2       base64enc_0.1-3       fs_1.5.0             
     ##  [10] rstudioapi_0.13       proxy_0.4-25          farver_2.1.0         
-    ##  [13] texPreview_1.5        ggrepel_0.9.1         fansi_0.4.2          
-    ##  [16] xml2_1.3.2            splines_4.0.4         cachem_1.0.4         
-    ##  [19] jsonlite_1.7.2        nloptr_1.2.2.2        broom_0.7.6          
-    ##  [22] dbplyr_2.1.1          png_0.1-7             broom.mixed_0.2.6    
-    ##  [25] shiny_1.6.0           clipr_0.7.1           compiler_4.0.4       
-    ##  [28] httr_1.4.2            backports_1.2.1       assertthat_0.2.1     
-    ##  [31] fastmap_1.1.0         svgPanZoom_0.3.4      cli_2.5.0            
-    ##  [34] later_1.2.0           htmltools_0.5.1.1     tools_4.0.4          
-    ##  [37] coda_0.19-4           gtable_0.3.0          glue_1.4.2           
-    ##  [40] reshape2_1.4.4        rappdirs_0.3.3        V8_3.4.0             
-    ##  [43] Rcpp_1.0.7            cellranger_1.1.0      pdftools_2.3.1       
-    ##  [46] vctrs_0.3.7           nlme_3.1-152          tigris_1.5           
-    ##  [49] xfun_0.26             rvest_1.0.0           mime_0.10            
-    ##  [52] lifecycle_1.0.0       statmod_1.4.35        MASS_7.3-53          
-    ##  [55] scales_1.1.1          hms_1.0.0             promises_1.2.0.1     
-    ##  [58] TMB_1.7.20            rematch2_2.1.2        yaml_2.2.1           
-    ##  [61] curl_4.3              memoise_2.0.0         stringi_1.5.3        
-    ##  [64] highr_0.8             desc_1.3.0            maptools_1.1-1       
-    ##  [67] e1071_1.7-6           boot_1.3-26           rlang_0.4.10         
-    ##  [70] pkgconfig_2.0.3       evaluate_0.14         lattice_0.20-41      
-    ##  [73] sf_1.0-2              labeling_0.4.2        tidyselect_1.1.0     
-    ##  [76] here_1.0.1            plyr_1.8.6            magrittr_2.0.1       
-    ##  [79] R6_2.5.0              magick_2.7.1          generics_0.1.0       
-    ##  [82] DBI_1.1.1             mgcv_1.8-33           whisker_0.4          
-    ##  [85] pillar_1.6.0          haven_2.3.1           foreign_0.8-81       
-    ##  [88] withr_2.4.2           units_0.7-1           sp_1.4-5             
-    ##  [91] modelr_0.1.8          crayon_1.4.1          uuid_0.1-4           
-    ##  [94] KernSmooth_2.23-18    utf8_1.2.1            tzdb_0.1.2           
-    ##  [97] rmarkdown_2.7         grid_4.0.4            readxl_1.3.1         
-    ## [100] qpdf_1.1              reprex_2.0.0          digest_0.6.27        
-    ## [103] classInt_0.4-3        xtable_1.8-4          httpuv_1.6.0         
-    ## [106] details_0.2.1         munsell_0.5.0         askpass_1.1
+    ##  [13] ggrepel_0.9.1         fansi_0.4.2           xml2_1.3.2           
+    ##  [16] splines_4.0.4         cachem_1.0.4          jsonlite_1.7.2       
+    ##  [19] nloptr_1.2.2.2        broom_0.7.6           dbplyr_2.1.1         
+    ##  [22] png_0.1-7             broom.mixed_0.2.6     shiny_1.6.0          
+    ##  [25] clipr_0.7.1           compiler_4.0.4        httr_1.4.2           
+    ##  [28] backports_1.2.1       assertthat_0.2.1      fastmap_1.1.0        
+    ##  [31] svgPanZoom_0.3.4      cli_2.5.0             later_1.2.0          
+    ##  [34] htmltools_0.5.1.1     tools_4.0.4           coda_0.19-4          
+    ##  [37] gtable_0.3.0          glue_1.4.2            reshape2_1.4.4       
+    ##  [40] rappdirs_0.3.3        V8_3.4.0              Rcpp_1.0.7           
+    ##  [43] cellranger_1.1.0      pdftools_2.3.1        vctrs_0.3.7          
+    ##  [46] nlme_3.1-152          tigris_1.5            xfun_0.26            
+    ##  [49] rvest_1.0.0           mime_0.10             lifecycle_1.0.0      
+    ##  [52] statmod_1.4.35        MASS_7.3-53           scales_1.1.1         
+    ##  [55] hms_1.0.0             promises_1.2.0.1      TMB_1.7.20           
+    ##  [58] rematch2_2.1.2        yaml_2.2.1            curl_4.3             
+    ##  [61] memoise_2.0.0         stringi_1.5.3         highr_0.8            
+    ##  [64] maptools_1.1-1        desc_1.3.0            e1071_1.7-6          
+    ##  [67] boot_1.3-26           rlang_0.4.10          pkgconfig_2.0.3      
+    ##  [70] evaluate_0.14         lattice_0.20-41       sf_1.0-2             
+    ##  [73] labeling_0.4.2        tidyselect_1.1.0      here_1.0.1           
+    ##  [76] plyr_1.8.6            magrittr_2.0.1        R6_2.5.0             
+    ##  [79] magick_2.7.1          generics_0.1.0        DBI_1.1.1            
+    ##  [82] mgcv_1.8-33           whisker_0.4           pillar_1.6.0         
+    ##  [85] haven_2.3.1           foreign_0.8-81        withr_2.4.2          
+    ##  [88] units_0.7-1           sp_1.4-5              modelr_0.1.8         
+    ##  [91] crayon_1.4.1          uuid_0.1-4            KernSmooth_2.23-18   
+    ##  [94] utf8_1.2.1            tzdb_0.1.2            rmarkdown_2.7        
+    ##  [97] grid_4.0.4            readxl_1.3.1          qpdf_1.1             
+    ## [100] reprex_2.0.0          digest_0.6.27         classInt_0.4-3       
+    ## [103] xtable_1.8-4          httpuv_1.6.0          details_0.2.1        
+    ## [106] munsell_0.5.0         askpass_1.1

@@ -1,10 +1,5 @@
 ---
 title: "COVID-19 United States Excess Deaths by county and quarter"
-knit: (function(inputFile, encoding) { 
-      rmarkdown::render(inputFile,
-                        encoding = encoding, 
-                        output_dir = here::here())
-                        })
 output: github_document
 ---
 
@@ -18,11 +13,12 @@ library(lme4)
 library(equatiomatic)
 library(knitr)
 library(tinytex)
-# library(texPreview)
+library(texPreview)
 
 knitr::opts_chunk$set(
   echo = FALSE,
-  dev.args = list(png = list(type = "cairo")), dpi = 96
+  dev.args = list(png = list(type = "cairo")), dpi = 96,
+  fig.path = "README_files/"
 )
 
 options(
@@ -95,6 +91,8 @@ lmer_model <- readRDS(
 
 equatiomatic::extract_eq(
   lmer_model,
+  wrap = TRUE,
+  terms_per_line = 2,
   swap_var_names = c(
     "total_deaths_per_day" = "Total Deaths per Day",
     "population_z" = "County Population (z-score)",
@@ -103,7 +101,11 @@ equatiomatic::extract_eq(
     "region" = "County"
   )
 ) %>%
-  texPreview::tex_preview()
+  texPreview::tex_preview(
+    stem = "plot_equation-1",
+    fileDir = knitr::opts_chunk$get()$fig.path,
+    returnType = "html"
+  )
 
 ```
 
@@ -134,7 +136,7 @@ Observed and expected deaths in Q1 2020 are highly correlated, r = `r result_cor
 As can be seen from the following scatterplot, total deaths (x-axis) tended to exceed expected deaths (y-axis).
 Unsurprisingly, some of the counties that were hardest hit early in the pandemic are among those with total deaths that most diverge from expected deaths.
 
-```{r plot comparison, message=FALSE}
+```{r plot_comparison, message=FALSE}
 
 g <- ggplot(
   predict_check,
@@ -144,7 +146,7 @@ g <- ggplot(
   )
 )
 
-g +
+p <- g +
   geom_smooth(
     method = "lm",
     se = FALSE,
@@ -187,6 +189,8 @@ g +
   colorspace::scale_fill_continuous_diverging(palette = "cork") +
   coord_equal() +
   theme_minimal()
+
+print(p)
 
 ```
 
