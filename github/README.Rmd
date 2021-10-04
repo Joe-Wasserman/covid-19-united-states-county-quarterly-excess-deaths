@@ -1,0 +1,207 @@
+---
+title: "COVID-19 United States Excess Deaths by county and quarter"
+knit: (function(inputFile, encoding) { 
+      rmarkdown::render(inputFile,
+                        encoding = encoding, 
+                        output_dir = here::here())
+                        })
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidycensus)
+library(data.table)
+library(lubridate)
+library(aweek)
+library(lme4)
+library(equatiomatic)
+library(knitr)
+library(tinytex)
+# library(texPreview)
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  dev.args = list(png = list(type = "cairo")), dpi = 96
+)
+
+options(
+  "scipen" = 999,
+  digits = 3,
+  knitr.kable.NA = "n/a"
+)
+
+```
+
+This repository contains code and data to estimate **expected deaths** and **excess deaths** in the United States in 2020 by **county** and **quarter**.
+
+Estimated excess deaths are available at [`/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv).
+
+# Data Sources
+
+* CDC WONDER all-cause, all-ages deaths by county and month
+
+  https://wonder.cdc.gov/ucd-icd10.html
+  
+  These public-use historical mortality data were obtained for years 2015-2019 and used to estimate the expected deaths model.
+  Because these data have an unusual and specific license, they are not included as part of the repository, but can be freely downloaded from https://wonder.cdc.gov/ucd-icd10.html.
+  
+  Note: County-months wither fewer than 10 deaths are censored in the source data.
+
+* NCHS Provisional COVID-19 Deaths by Quarter, County and Age for 2020
+
+  https://data.cdc.gov/NCHS/AH-Provisional-COVID-19-Deaths-by-Quarter-County-a/ypxr-mz8e
+  
+  These public domain all-cause and COVID-19 mortality data were obtained for 2020 and compared to estimated expected deaths to calculate excess deaths.
+  The age groups in these data are not mutually exclusive.
+  To minimize the prevalence of suppression in these data, values from the two widest age groups, under 65 and 65 and older, were summed.
+  
+  Note: Values for county-quarter-age group with fewer than 9 deaths are suppressed.
+  
+* US Census Population Estimates
+
+  Population estimates for 2015-2019 were retrieved from the [US Census Bureau Population Estimates API](https://www.census.gov/data/developers/data-sets/popest-popproj.html) via the [tidycensus](https://github.com/walkerke/tidycensus) R package.
+  Population estimates for 2019 were filled forward for 2020.
+  
+  Note: This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
+  
+# Excess Deaths Model
+
+  The excess deaths model used began as an adaptation of *The Economist*'s [excess mortality model](https://github.com/TheEconomist/covid-19-excess-deaths-tracker), but has since diverged.
+  
+  Given the large number of counties in the United States (over 3000), a linear mixed model with county as a random grouping factor was used to make estimation tractable.
+  This random grouping factor enables every county to have its own intercept in the final model.
+  
+  More precisely, the model regresses **total deaths per day** on:
+  
+  * county population (z-scored)
+  
+  * years since 2015
+  
+  * quarter of the year (fixed grouping factor)
+  
+  * county (random grouping factor)
+  
+  This model can be expressed by the equation:
+  
+```{r equation, echo=FALSE}
+
+lmer_model <- readRDS(
+  file = file.path(
+      here::here(),
+      "results/united_states_county_quarterly_model.RDS"
+    )
+)
+
+equatiomatic::extract_eq(
+  lmer_model,
+  swap_var_names = c(
+    "total_deaths_per_day" = "Total Deaths per Day",
+    "population_z" = "County Population (z-score)",
+    "year_zero" = "Years since 2015",
+    "quarter" = "Quarter",
+    "region" = "County"
+  )
+) %>%
+  texPreview::tex_preview()
+
+```
+
+# Model Performance
+
+Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in Q1 2020.
+
+```{r performance}
+
+united_states_county_quarterly_excess_deaths_estimates <- data.table::fread(
+  file.path(
+    here::here(),
+    "results/united_states_county_quarterly_excess_deaths_estimates.csv"
+  ),
+  keepLeadingZeros = TRUE
+)
+
+predict_check <- united_states_county_quarterly_excess_deaths_estimates %>% 
+  filter(start_date == "2020-01-01") %>% 
+  select(region, region_code, total_deaths, expected_deaths)
+
+
+result_corr <- cor(predict_check$total_deaths, predict_check$expected_deaths)
+
+```
+
+Observed and expected deaths in Q1 2020 are highly correlated, r = `r result_corr`.
+As can be seen from the following scatterplot, total deaths (x-axis) tended to exceed expected deaths (y-axis).
+Unsurprisingly, some of the counties that were hardest hit early in the pandemic are among those with total deaths that most diverge from expected deaths.
+
+```{r plot comparison, message=FALSE}
+
+g <- ggplot(
+  predict_check,
+  aes(
+    x = total_deaths, 
+    y = expected_deaths
+  )
+)
+
+g +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    fullrange = TRUE,
+    color = "red",
+    size = .3,
+    linetype = "dotted"
+  ) +
+  geom_point(
+    shape = 21,
+    color = "grey20",
+    alpha = .6
+  ) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    size = 0.3,
+    color = "grey25"
+  ) +
+  ggrepel::geom_label_repel(
+    data = filter(
+      predict_check, 
+      total_deaths > 5750 | 
+        total_deaths/expected_deaths > 1.35),
+    aes(label = region),
+    color = "grey10",
+    segment.color = "grey40",
+    size = 3,
+    min.segment.length = 0,
+    force = 10,
+    force_pull = .0001,
+    point.padding = .4,
+    label.padding = .1,
+    max.time = 5,
+    label.size = NA,
+    nudge_x = 2000,
+    nudge_y = -1000,
+    seed = 20211004
+  ) +
+  colorspace::scale_fill_continuous_diverging(palette = "cork") +
+  coord_equal() +
+  theme_minimal()
+
+```
+
+# Repository Organization
+
+* Excess deaths estimates and fitted LMM are available in `/results/`.
+
+* Code to fit the model and estimate excess deaths are available in `/code/`.
+
+* Data used in modeling are available in `/data/`, when possible.
+
+# License
+
+The code contained in this repository are available under the [MIT License](https://opensource.org/licenses/MIT), and the data generated by this code are licensed under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+
+```{r}
+sessionInfo()
+```
