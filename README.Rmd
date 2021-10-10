@@ -3,13 +3,12 @@ title: "COVID-19 United States Excess Deaths by county and quarter"
 output: github_document
 ---
 
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(tidycensus)
 library(data.table)
 library(lubridate)
-library(aweek)
-library(lme4)
 library(equatiomatic)
 library(knitr)
 library(tinytex)
@@ -17,19 +16,42 @@ library(texPreview)
 
 knitr::opts_chunk$set(
   echo = FALSE,
+  collapse = TRUE,
   dev.args = list(png = list(type = "cairo")), dpi = 96,
   fig.path = "README_files/"
 )
 
 options(
-  "scipen" = 999,
+  scipen = 999,
   digits = 3,
   knitr.kable.NA = "n/a"
 )
+```
 
+```{r import}
+lmer_model <- readRDS(
+  file = file.path(
+    here::here(),
+    "results/united_states_county_quarterly_model.RDS"
+  )
+)
+
+united_states_county_quarterly_excess_deaths_estimates <- data.table::fread(
+  file.path(
+    here::here(),
+    "results/united_states_county_quarterly_excess_deaths_estimates.csv"
+  ),
+  keepLeadingZeros = TRUE
+)
+
+total_excess_deaths <- united_states_county_quarterly_excess_deaths_estimates %>%
+  filter(year == 2020L) %>%
+  pull(excess_deaths) %>%
+  sum(na.rm = TRUE)
 ```
 
 This repository contains code and data to estimate **expected deaths** and **excess deaths** in the United States in 2020 by **county** and **quarter**.
+This model estimates that there were `r total_excess_deaths` excess deaths in the United States in 2020.
 
 Estimated excess deaths are available at [`/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv).
 
@@ -56,16 +78,15 @@ Estimated excess deaths are available at [`/blob/main/results/united_states_coun
   
 * US Census Population Estimates
 
-  Population estimates for 2015-2019 were retrieved from the [US Census Bureau Population Estimates API](https://www.census.gov/data/developers/data-sets/popest-popproj.html) via the [tidycensus](https://github.com/walkerke/tidycensus) R package.
-  Population estimates for 2019 were filled forward for 2020.
+  Population estimates for 2015-2020 were retrieved from the [US Census Bureau Population Estimates](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-counties-total.html), because these data are not yet included in the Census Bureau Data API.
   
-  Note: This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
+  Note: This product uses Census Bureau data but is not endorsed or certified by the Census Bureau.
   
 # Excess Deaths Model
 
   The excess deaths model used began as an adaptation of *The Economist*'s [excess mortality model](https://github.com/TheEconomist/covid-19-excess-deaths-tracker), but has since diverged.
   
-  Given the large number of counties in the United States (over 3000), a linear mixed model with county as a random grouping factor was used to make estimation tractable.
+  Given the large number of counties in the United States (over 3000), a linear mixed model with county, county set, and census division as random grouping factors was used to make estimation tractable.
   This random grouping factor enables every county to have its own intercept in the final model.
   
   More precisely, the model regresses **total deaths per day** on:
@@ -76,72 +97,62 @@ Estimated excess deaths are available at [`/blob/main/results/united_states_coun
   
   * quarter of the year (fixed grouping factor)
   
-  * county (random grouping factor)
+  * county (random grouping factor nested within county set)
   
-  This model can be expressed by the equation:
+  * county set (random grouping factor nested within census division)
   
-```{r equation, echo=FALSE}
+  * census division (random grouping factor)
+  
+<!--   This model can be expressed by the equation: -->
 
-lmer_model <- readRDS(
-  file = file.path(
-      here::here(),
-      "results/united_states_county_quarterly_model.RDS"
-    )
-)
+<!-- ```{r equation} -->
+<!-- equatiomatic::extract_eq( -->
+<!--   lmer_model, -->
+<!--   wrap = TRUE, -->
+<!--   terms_per_line = 2, -->
+<!--   swap_var_names = c( -->
+<!--     "total_deaths_per_day" = "Total Deaths per Day", -->
+<!--     "population_z" = "County Population (z-score)", -->
+<!--     "year_zero" = "Years since 2015", -->
+<!--     "quarter" = "Quarter", -->
+<!--     "region_code" = "County", -->
+<!--     "county_set_code" = "County Set", -->
+<!--     "census_division" = "Census Division" -->
+<!--   ) -->
+<!-- ) %>% -->
+<!--   texPreview::tex_preview( -->
+<!--     stem = "plot_equation-1", -->
+<!--     fileDir = knitr::opts_chunk$get()$fig.path, -->
+<!--     returnType = "html" -->
+<!--   ) -->
+<!-- ``` -->
 
-equatiomatic::extract_eq(
-  lmer_model,
-  wrap = TRUE,
-  terms_per_line = 2,
-  swap_var_names = c(
-    "total_deaths_per_day" = "Total Deaths per Day",
-    "population_z" = "County Population (z-score)",
-    "year_zero" = "Years since 2015",
-    "quarter" = "Quarter",
-    "region" = "County"
-  )
-) %>%
-  texPreview::tex_preview(
-    stem = "plot_equation-1",
-    fileDir = knitr::opts_chunk$get()$fig.path,
-    returnType = "html"
-  )
+The model object is available at [`/blob/main/results/united_states_county_quarterly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_model.RDS).
 
-```
+The model estimates for each observation, including fitted values and residuals, are available at [`/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv).
 
 # Model Performance
 
-Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in Q1 2020.
+For more details on model selection and performance, see [`/blob/main/docs/modeling_and_model_selection.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/docs/modeling_and_model_selection.md).
+
+Because the COVID-19 pandemic only began in the United States partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in Q1 2020.
 
 ```{r performance}
+predict_check <- united_states_county_quarterly_excess_deaths_estimates %>%
+  filter(start_date == "2020-01-01")
 
-united_states_county_quarterly_excess_deaths_estimates <- data.table::fread(
-  file.path(
-    here::here(),
-    "results/united_states_county_quarterly_excess_deaths_estimates.csv"
-  ),
-  keepLeadingZeros = TRUE
-)
-
-predict_check <- united_states_county_quarterly_excess_deaths_estimates %>% 
-  filter(start_date == "2020-01-01") %>% 
-  select(region, region_code, total_deaths, expected_deaths)
-
-
-result_corr <- cor(predict_check$total_deaths, predict_check$expected_deaths)
-
+result_corr <- cor.test(x = predict_check$total_deaths, y = predict_check$expected_deaths)
 ```
 
-Observed and expected deaths in Q1 2020 are highly correlated, r = `r result_corr`.
+Observed and expected deaths in Q1 2020 are highly correlated, r = `r result_corr$estimate`.
 As can be seen from the following scatterplot, total deaths (x-axis) tended to exceed expected deaths (y-axis).
 Unsurprisingly, some of the counties that were hardest hit early in the pandemic are among those with total deaths that most diverge from expected deaths.
 
-```{r plot_comparison, message=FALSE}
-
+```{r plot_comparison, message=FALSE, warning=FALSE}
 g <- ggplot(
   predict_check,
   aes(
-    x = total_deaths, 
+    x = total_deaths,
     y = expected_deaths
   )
 )
@@ -168,9 +179,10 @@ p <- g +
   ) +
   ggrepel::geom_label_repel(
     data = filter(
-      predict_check, 
-      total_deaths > 5750 | 
-        total_deaths/expected_deaths > 1.35),
+      predict_check,
+      total_deaths > 5750 |
+        total_deaths / expected_deaths > 1.35
+    ),
     aes(label = region),
     color = "grey10",
     segment.color = "grey40",
@@ -191,7 +203,6 @@ p <- g +
   theme_minimal()
 
 print(p)
-
 ```
 
 # Repository Organization
@@ -206,6 +217,6 @@ print(p)
 
 The code contained in this repository are available under the [MIT License](https://opensource.org/licenses/MIT), and the data generated by this code are licensed under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
-```{r}
+```{r, echo=TRUE}
 sessionInfo()
 ```

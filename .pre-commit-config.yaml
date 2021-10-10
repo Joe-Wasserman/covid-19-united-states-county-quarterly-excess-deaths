@@ -2,7 +2,7 @@
 # R specific hooks: https://github.com/lorenzwalthert/precommit
 repos:
 -   repo: https://github.com/lorenzwalthert/precommit
-    rev: v0.1.3.9130
+    rev: v0.1.3.9131
     hooks:
     -   id: style-files
         args: [--style_pkg=styler, --style_fun=tidyverse_style]
@@ -13,7 +13,7 @@ repos:
     rev: v4.0.1
     hooks:
     -   id: check-added-large-files
-        args: ['--maxkb=7500']
+        args: ['--maxkb=9216']
     -   id: end-of-file-fixer
         exclude: '\.Rd'
 -   repo: local
