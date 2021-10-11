@@ -1,6 +1,15 @@
 # This script conforms historical and recent US mortality data
 # Estimates 2020 expected and excess mortality by county and quarter
 
+# libraries necessary for analyses
+library(tidyverse)
+library(furrr)
+library(tidycensus)
+library(data.table)
+library(lubridate)
+library(aweek)
+library(lme4)
+
 ## ---- import ----
 
 # Import historical county-monthly data downloaded from CDC WONDER
@@ -278,15 +287,22 @@ icc <- list(
   c("region_code", "census_division", "quarter"),
   c("region_code", "census_region", "quarter"),
   c("region_code", "county_set_code", "census_division", "quarter"),
-  c("region_code", "county_set_code", "census_region", "quarter")
-) %>% furrr::future_map(
-  .,
-  ~ multilevelTools::iccMixed(
-    dv = "total_deaths_per_day",
-    id = .x,
-    data = united_states_county_quarterly_deaths
+  c("region_code", "county_set_code", "census_region", "quarter"),
+  c("region_code", "state", "quarter"),
+  c("region_code", "county_set_code", "state", "quarter"),
+  c("region_code", "state", "census_division", "quarter"),
+  c("region_code", "state", "census_region", "quarter"),
+  c("region_code", "county_set_code", "state", "census_division", "quarter"),
+  c("region_code", "county_set_code", "state", "census_region", "quarter")
+) %>%
+  furrr::future_map(
+    .,
+    ~ multilevelTools::iccMixed(
+      dv = "total_deaths_per_day",
+      id = .x,
+      data = united_states_county_quarterly_deaths
+    )
   )
-)
 
 ## ---- models ----
 
@@ -300,6 +316,7 @@ strictControl <- lmerControl(optCtrl = list(
 # Specify competing formulas for lmm with different nesting structures
 # NOTE: lme4::lmer() does not require nested random grouping factor syntax
 lmm_formulas <- list(
+  # 1
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -309,6 +326,7 @@ lmm_formulas <- list(
       (1 | region_code)"
     )
   ),
+  # 2
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -319,6 +337,7 @@ lmm_formulas <- list(
       (1 | county_set_code)"
     )
   ),
+  # 3
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -329,6 +348,7 @@ lmm_formulas <- list(
       (1 | census_division)"
     )
   ),
+  # 4
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -339,6 +359,7 @@ lmm_formulas <- list(
       (1 | census_region)"
     )
   ),
+  # 5
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -350,6 +371,7 @@ lmm_formulas <- list(
       (1 | census_division)"
     )
   ),
+  # 6
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -358,6 +380,79 @@ lmm_formulas <- list(
       quarter +
       (1 | region_code) +
       (1 | county_set_code) +
+      (1 | census_region)"
+    )
+  ),
+  # 7
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      quarter +
+      (1 | region_code) +
+      (1 | state)"
+    )
+  ),
+  # 8
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      quarter +
+      (1 | region_code) +
+      (1 | county_set_code) +
+      (1 | state)"
+    )
+  ),
+  # 9
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      quarter +
+      (1 | region_code) +
+      (1 | state) +
+      (1 | census_division)"
+    )
+  ),
+  # 10
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      quarter +
+      (1 | region_code) +
+      (1 | state) +
+      (1 | census_region)"
+    )
+  ),
+  # 11
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      quarter +
+      (1 | region_code) +
+      (1 | county_set_code) +
+      (1 | state) +
+      (1 | census_division)"
+    )
+  ),
+  # 12
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      quarter +
+      (1 | region_code) +
+      (1 | county_set_code) +
+      (1 | state) +
       (1 | census_region)"
     )
   )
@@ -403,16 +498,16 @@ expected_deaths <- model_out %>%
 ## ---- validation-performance ----
 # compare model mean squared error on 2020 Q1 validation set
 model_mse <- expected_deaths %>%
-  map(
+  imap_dfr(
     ~ .x %>%
       filter(year == 2020, quarter == "1") %>%
       summarise(
+        model = .y,
         mse = mean(
           (expected_deaths - total_deaths)^2,
           na.rm = TRUE
         )
-      ) %>%
-      deframe()
+      )
   )
 
 ## ---- volatility ----
@@ -451,9 +546,10 @@ data_fitted_outliers_only <- model_volatility %>%
     filter(outlier_count > 0))
 
 model_volatility_summary <- data_fitted_outliers_only %>%
-  map(
+  imap_dfr(
     ~ .x %>%
       summarize(
+        model = .y,
         outlier_regions = n(),
         outlier_total = sum(outlier_count)
       )
@@ -496,7 +592,7 @@ fitted_outlier_plots <- data_fitted_outliers_only %>%
 # run the final selected model
 united_states_county_quarterly_results <- estimate_excess_deaths(
   df = united_states_county_quarterly_deaths,
-  expected_deaths_formula = lmm_formulas[[5]],
+  expected_deaths_formula = lmm_formulas[[8]],
   period = "quarter",
   calculate = TRUE,
   train_model = TRUE

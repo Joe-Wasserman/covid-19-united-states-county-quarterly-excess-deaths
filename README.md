@@ -5,7 +5,7 @@ COVID-19 United States Excess Deaths by county and quarter
 
 This repository contains code and data to estimate **expected deaths**
 and **excess deaths** in the United States in 2020 by **county** and
-**quarter**. This model estimates that there were 461911.25 excess
+**quarter**. This model estimates that there were about 461870 excess
 deaths in the United States in 2020.
 
 Estimated excess deaths are available at
@@ -56,15 +56,17 @@ Estimated excess deaths are available at
 The excess deaths model used began as an adaptation of *The Economist*’s
 [excess mortality
 model](https://github.com/TheEconomist/covid-19-excess-deaths-tracker),
-but has since diverged.
+but has since diverged. For details on model selection and performance,
+see
+[`/blob/main/docs/modeling_and_model_selection.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/docs/modeling_and_model_selection.md).
 
 Given the large number of counties in the United States (over 3000), a
 linear mixed model with county, county set, and census division as
-random grouping factors was used to make estimation tractable. This
-random grouping factor enables every county to have its own intercept in
-the final model.
+random grouping factors was used to make estimation tractable. These
+random grouping factors enable each county, county set, and state to
+have their own intercepts in the final model.
 
-More precisely, the model regresses **total deaths per day** on:
+More precisely, **total deaths per day** was regressed on:
 
 -   county population (z-scored)
 
@@ -74,9 +76,9 @@ More precisely, the model regresses **total deaths per day** on:
 
 -   county (random grouping factor nested within county set)
 
--   county set (random grouping factor nested within census division)
+-   county set (random grouping factor nested within state)
 
--   census division (random grouping factor)
+-   state (random grouping factor)
 
 <!--   This model can be expressed by the equation: -->
 <!-- ```{r equation} -->
@@ -91,7 +93,7 @@ More precisely, the model regresses **total deaths per day** on:
 <!--     "quarter" = "Quarter", -->
 <!--     "region_code" = "County", -->
 <!--     "county_set_code" = "County Set", -->
-<!--     "census_division" = "Census Division" -->
+<!--     "state" = "State" -->
 <!--   ) -->
 <!-- ) %>% -->
 <!--   texPreview::tex_preview( -->
@@ -107,6 +109,10 @@ The model object is available at
 The model estimates for each observation, including fitted values and
 residuals, are available at
 [`/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv).
+Note that these estimates are only y-hat directly from the initial
+model, **not** predicted values on the full dataset, which are
+[available
+here](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv)..
 
 # Model Performance
 
