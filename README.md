@@ -80,28 +80,9 @@ More precisely, **total deaths per day** was regressed on:
 
 -   state (random grouping factor)
 
-<!--   This model can be expressed by the equation: -->
-<!-- ```{r equation} -->
-<!-- equatiomatic::extract_eq( -->
-<!--   lmer_model, -->
-<!--   wrap = TRUE, -->
-<!--   terms_per_line = 2, -->
-<!--   swap_var_names = c( -->
-<!--     "total_deaths_per_day" = "Total Deaths per Day", -->
-<!--     "population_z" = "County Population (z-score)", -->
-<!--     "year_zero" = "Years since 2015", -->
-<!--     "quarter" = "Quarter", -->
-<!--     "region_code" = "County", -->
-<!--     "county_set_code" = "County Set", -->
-<!--     "state" = "State" -->
-<!--   ) -->
-<!-- ) %>% -->
-<!--   texPreview::tex_preview( -->
-<!--     stem = "plot_equation-1", -->
-<!--     fileDir = knitr::opts_chunk$get()$fig.path, -->
-<!--     returnType = "html" -->
-<!--   ) -->
-<!-- ``` -->
+This model can be expressed by the equation:
+
+<img src="README_files/equation-1.png" width="702" />
 
 The model object is available at
 [`/blob/main/results/united_states_county_quarterly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_model.RDS).
@@ -166,39 +147,44 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] texPreview_1.5     tinytex_0.34       knitr_1.31         equatiomatic_0.3.0
-##  [5] lubridate_1.7.10   data.table_1.14.0  forcats_0.5.1      stringr_1.4.0     
-##  [9] dplyr_1.0.5        purrr_0.3.4        readr_2.0.2        tidyr_1.1.3       
-## [13] tibble_3.1.0       ggplot2_3.3.5      tidyverse_1.3.1   
+##  [1] lmerTest_3.1-3          lme4_1.1-26             Matrix_1.3-2           
+##  [4] texPreview_1.5          tinytex_0.34            knitr_1.31             
+##  [7] equatiomatic_0.3.0.9000 lubridate_1.7.10        data.table_1.14.0      
+## [10] forcats_0.5.1           stringr_1.4.0           dplyr_1.0.5            
+## [13] purrr_0.3.4             readr_2.0.2             tidyr_1.1.3            
+## [16] tibble_3.1.0            ggplot2_3.3.5           tidyverse_1.3.1        
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] nlme_3.1-152          fs_1.5.0              httr_1.4.2           
-##  [4] rprojroot_2.0.2       tools_4.0.4           backports_1.2.1      
-##  [7] utf8_1.2.1            R6_2.5.0              svgPanZoom_0.3.4     
-## [10] mgcv_1.8-33           DBI_1.1.1             colorspace_2.0-0     
-## [13] withr_2.4.2           tidyselect_1.1.0      curl_4.3             
-## [16] compiler_4.0.4        cli_2.5.0             rvest_1.0.0          
-## [19] xml2_1.3.2            desc_1.3.0            labeling_0.4.2       
-## [22] scales_1.1.1          digest_0.6.27         minqa_1.2.4          
-## [25] rmarkdown_2.7         base64enc_0.1-3       pkgconfig_2.0.3      
-## [28] htmltools_0.5.1.1     lme4_1.1-26           highr_0.8            
-## [31] dbplyr_2.1.1          fastmap_1.1.0         rlang_0.4.10         
-## [34] readxl_1.3.1          rstudioapi_0.13       shiny_1.6.0          
-## [37] farver_2.1.0          generics_0.1.0        jsonlite_1.7.2       
-## [40] magrittr_2.0.1        Matrix_1.3-2          Rcpp_1.0.7           
-## [43] munsell_0.5.0         fansi_0.4.2           clipr_0.7.1          
-## [46] lifecycle_1.0.0       stringi_1.5.3         whisker_0.4          
-## [49] yaml_2.2.1            MASS_7.3-53           grid_4.0.4           
-## [52] ggrepel_0.9.1         promises_1.2.0.1      crayon_1.4.1         
-## [55] details_0.2.1         lattice_0.20-41       haven_2.3.1          
-## [58] splines_4.0.4         hms_1.0.0             magick_2.7.3         
-## [61] pillar_1.6.0          boot_1.3-26           reprex_2.0.0         
-## [64] glue_1.4.2            evaluate_0.14         V8_3.4.0             
-## [67] modelr_0.1.8          nloptr_1.2.2.2        vctrs_0.3.7          
-## [70] png_0.1-7             tzdb_0.1.2            httpuv_1.6.0         
-## [73] cellranger_1.1.0      gtable_0.3.0          rematch2_2.1.2       
-## [76] assertthat_0.2.1      cachem_1.0.4          xfun_0.26            
-## [79] mime_0.10             xtable_1.8-4          broom_0.7.6          
-## [82] later_1.2.0           memoise_2.0.0         statmod_1.4.35       
-## [85] ellipsis_0.3.1        rdocsyntax_0.4.1.9000 here_1.0.1
+##  [1] rdocsyntax_0.4.1.9000 minqa_1.2.4           colorspace_2.0-0     
+##  [4] ellipsis_0.3.1        rprojroot_2.0.2       base64enc_0.1-3      
+##  [7] fs_1.5.0              rstudioapi_0.13       farver_2.1.0         
+## [10] ggrepel_0.9.1         fansi_0.4.2           xml2_1.3.2           
+## [13] splines_4.0.4         cachem_1.0.4          jsonlite_1.7.2       
+## [16] nloptr_1.2.2.2        broom_0.7.6           dbplyr_2.1.1         
+## [19] png_0.1-7             broom.mixed_0.2.6     shiny_1.6.0          
+## [22] clipr_0.7.1           compiler_4.0.4        httr_1.4.2           
+## [25] backports_1.2.1       assertthat_0.2.1      fastmap_1.1.0        
+## [28] cli_3.0.1             svgPanZoom_0.3.4      later_1.2.0          
+## [31] htmltools_0.5.1.1     tools_4.0.4           coda_0.19-4          
+## [34] gtable_0.3.0          glue_1.4.2            reshape2_1.4.4       
+## [37] V8_3.4.0              Rcpp_1.0.7            cellranger_1.1.0     
+## [40] vctrs_0.3.7           pdftools_2.3.1        nlme_3.1-152         
+## [43] xfun_0.26             rvest_1.0.0           mime_0.10            
+## [46] lifecycle_1.0.0       statmod_1.4.35        MASS_7.3-53          
+## [49] scales_1.1.1          hms_1.0.0             promises_1.2.0.1     
+## [52] rematch2_2.1.2        TMB_1.7.20            yaml_2.2.1           
+## [55] curl_4.3              memoise_2.0.0         stringi_1.5.3        
+## [58] highr_0.8             desc_1.3.0            boot_1.3-26          
+## [61] rlang_0.4.10          pkgconfig_2.0.3       evaluate_0.14        
+## [64] lattice_0.20-41       labeling_0.4.2        tidyselect_1.1.0     
+## [67] here_1.0.1            plyr_1.8.6            magrittr_2.0.1       
+## [70] R6_2.5.0              magick_2.7.3          generics_0.1.0       
+## [73] DBI_1.1.1             pillar_1.6.0          haven_2.3.1          
+## [76] whisker_0.4           withr_2.4.2           mgcv_1.8-33          
+## [79] modelr_0.1.8          crayon_1.4.1          utf8_1.2.1           
+## [82] tzdb_0.1.2            rmarkdown_2.7         grid_4.0.4           
+## [85] readxl_1.3.1          qpdf_1.1              reprex_2.0.0         
+## [88] digest_0.6.27         xtable_1.8-4          httpuv_1.6.0         
+## [91] numDeriv_2016.8-1.1   details_0.2.1         munsell_0.5.0        
+## [94] askpass_1.1
 ```

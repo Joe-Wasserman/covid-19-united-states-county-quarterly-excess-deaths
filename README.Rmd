@@ -104,29 +104,29 @@ Estimated excess deaths are available at [`/blob/main/results/united_states_coun
   
   * state (random grouping factor)
   
-<!--   This model can be expressed by the equation: -->
+  This model can be expressed by the equation:
 
-<!-- ```{r equation} -->
-<!-- equatiomatic::extract_eq( -->
-<!--   lmer_model, -->
-<!--   wrap = TRUE, -->
-<!--   terms_per_line = 2, -->
-<!--   swap_var_names = c( -->
-<!--     "total_deaths_per_day" = "Total Deaths per Day", -->
-<!--     "population_z" = "County Population (z-score)", -->
-<!--     "year_zero" = "Years since 2015", -->
-<!--     "quarter" = "Quarter", -->
-<!--     "region_code" = "County", -->
-<!--     "county_set_code" = "County Set", -->
-<!--     "state" = "State" -->
-<!--   ) -->
-<!-- ) %>% -->
-<!--   texPreview::tex_preview( -->
-<!--     stem = "plot_equation-1", -->
-<!--     fileDir = knitr::opts_chunk$get()$fig.path, -->
-<!--     returnType = "html" -->
-<!--   ) -->
-<!-- ``` -->
+```{r equation, message=FALSE}
+equatiomatic::extract_eq(
+  lmer_model,
+  wrap = TRUE,
+  terms_per_line = 2,
+  swap_var_names = c(
+    "total_deaths_per_day" = "Total Deaths per Day",
+    "population_z" = "County Population (z-score)",
+    "year_zero" = "Years since 2015",
+    "quarter" = "Quarter",
+    "region_code" = "County",
+    "county_set_code" = "County Set",
+    "state" = "State"
+  )
+) %>%
+  texPreview::tex_preview(
+    stem = "plot_equation-1",
+    fileDir = knitr::opts_chunk$get()$fig.path,
+    returnType = "html"
+  )
+```
 
 The model object is available at [`/blob/main/results/united_states_county_quarterly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_model.RDS).
 
