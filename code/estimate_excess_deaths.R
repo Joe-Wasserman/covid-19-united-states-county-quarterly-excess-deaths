@@ -2,7 +2,7 @@
 # adapted from The Economist's excess deaths model
 # see https://github.com/TheEconomist/covid-19-excess-deaths-tracker
 
-estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_deaths_model = NULL, period = "quarter", calculate = TRUE, train_model = TRUE) {
+estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_deaths_model = NULL, period = "quarter", train_model = TRUE) {
   year_min <- min(df$year, na.rm = TRUE)
 
   df_model <- df %>%
@@ -10,13 +10,10 @@ estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_
       year_zero = year - year_min
     )
 
-  # Calculate expected deaths
-  if (calculate == FALSE) {
-
-    # Use pre-existing official model results
-    expected_deaths <- df %>%
-      filter(year >= 2020)
-  } else if (train_model == FALSE) {
+  if (train_model == FALSE) {
+    if (is.null(expected_deaths_model)) {
+      stop(glue::glue("When train_model = FALSE, expected_deaths_model must be a model object to use to estimate expected deaths."))
+    }
 
     # Use previously trained model
     expected_deaths <- df_model %>%
@@ -31,7 +28,6 @@ estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_
   } else if (period %in% c("month", "quarter")) {
 
     # Train a monthly or quarterly model
-
     train_df <- df_model %>%
       filter(end_date < ymd("2020-03-01"))
 
@@ -45,9 +41,8 @@ estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_
       control = strictControl
     )
 
-    # predict expected deaths for 2020+ observations
+    # predict expected deaths for all observations, including historical
     expected_deaths <- df_model %>%
-      filter(year >= 2020) %>%
       mutate(
         expected_deaths = predict(
           expected_deaths_model,

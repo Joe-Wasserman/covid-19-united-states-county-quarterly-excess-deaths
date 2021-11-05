@@ -29,6 +29,7 @@ knitr::opts_chunk$set(
 options(
   scipen = 999,
   digits = 3,
+  future.globals.maxSize = 1000000*1024,
   knitr.kable.NA = "n/a"
 )
 
@@ -107,7 +108,7 @@ model_performance %>%
 
 Compare mean squared error (MSE) of model-predicted death rates against observed death rates in Q1 2020.
 Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in Q1 2020.
-Models 5, 7, 8, 11, and 12 have the lowest MSE.
+Models 5, 8, 11, and 12 have the lowest MSE.
 
 ```{r validation-performance}
 ```
@@ -123,7 +124,8 @@ model_mse %>%
 # Outlier estimates
 
 To evaluate the extent of outlier model predictions, including unexpectedly large changes quarter-to-quarter, time series outliers were identified using `tsoutliers()` from the {[forecast](https://cran.r-project.org/package=forecast)} R package.
-Using this method, no models had any county-quarter outliers.
+Using this method, only models 2 and 3 had no outliers.
+Potential outliers identified for other states were concentrated in several Mountain West counties with zero non-censored values 2015-2019.
 
 ```{r volatility}
 ```
@@ -137,13 +139,13 @@ model_volatility_summary %>%
 ```
 
 
-<!-- ```{r plot-volatility} -->
-<!-- ```  -->
+```{r plot-volatility}
+```
 
-<!-- ```{r plot volatility output, include=TRUE, error=FALSE} -->
-<!-- try(fitted_outlier_plots %>%  -->
-<!--   walk(print)) -->
-<!-- ``` -->
+```{r plot volatility output, include=TRUE, error=FALSE}
+try(fitted_outlier_plots %>%
+  walk(print))
+```
 
 # Final model
 
