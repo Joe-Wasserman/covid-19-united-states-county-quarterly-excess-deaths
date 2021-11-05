@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   include = FALSE,
   dev.args = list(png = list(type = "cairo")), dpi = 96,
-  fig.path = "modeling_and_model_selection_files/"
+  fig.path = "README/"
 )
 
 options(

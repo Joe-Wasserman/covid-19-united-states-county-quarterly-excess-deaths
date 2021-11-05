@@ -56,7 +56,7 @@ The excess deaths model used began as an adaptation of *The Economist*’s
 model](https://github.com/TheEconomist/covid-19-excess-deaths-tracker),
 but has since diverged. For details on model selection and performance,
 see
-[`/blob/main/docs/modeling_and_model_selection.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/docs/modeling_and_model_selection.md).
+[`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
 
 Given the large number of counties in the United States (over 3000), a
 linear mixed model with county, county set, and census division as
@@ -80,8 +80,6 @@ More precisely, **total deaths per day** was regressed on:
 
 This model can be expressed by the equation:
 
-    ## Warning: package 'lme4' was built under R version 4.0.5
-
 <img src="README_files/equation-1.png" width="702" />
 
 The model object is available at
@@ -98,7 +96,7 @@ here](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-de
 # Model Performance
 
 For more details on model selection and performance, see
-[`/blob/main/docs/modeling_and_model_selection.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/docs/modeling_and_model_selection.md).
+[`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
 
 Because the COVID-19 pandemic only began in the United States partway
 through March, 2020, we can evaluate model performance by examining
