@@ -17,6 +17,8 @@ library(texPreview)
 knitr::opts_chunk$set(
   echo = FALSE,
   collapse = TRUE,
+  warning = FALSE,
+  message = FALSE,
   dev.args = list(png = list(type = "cairo")), dpi = 96,
   fig.path = "README_files/"
 )
@@ -44,14 +46,19 @@ united_states_county_quarterly_excess_deaths_estimates <- data.table::fread(
   keepLeadingZeros = TRUE
 )
 
-total_excess_deaths <- united_states_county_quarterly_excess_deaths_estimates %>%
+total_excess_deaths_2020 <- united_states_county_quarterly_excess_deaths_estimates %>%
   filter(year == 2020L) %>%
+  pull(excess_deaths) %>%
+  sum(na.rm = TRUE)
+
+total_excess_deaths_2021 <- united_states_county_quarterly_excess_deaths_estimates %>%
+  filter(year == 2021L) %>%
   pull(excess_deaths) %>%
   sum(na.rm = TRUE)
 ```
 
-This repository contains code and data to estimate **expected deaths** and **excess deaths** in the United States in 2020 by **county** and **quarter**.
-This model estimates that there were about `r round(total_excess_deaths)` excess deaths in the United States in 2020.
+This repository contains code and data to estimate **expected deaths** and **excess deaths** in the United States in 2020 and 2021 by **county** and **quarter**.
+This model estimates that there were about `r round(total_excess_deaths_2020)` excess deaths in the United States in 2020 and `r round(total_excess_deaths_2021)` in the first two quarters of 2021, for a total of `r round(sum(total_excess_deaths_2020, total_excess_deaths_2021))`.
 
 Estimated excess deaths are available at [`/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv).
 
@@ -66,26 +73,25 @@ Estimated excess deaths are available at [`/blob/main/results/united_states_coun
   
   Note: County-months wither fewer than 10 deaths are censored in the source data.
 
-* NCHS Provisional COVID-19 Deaths by Quarter, County and Age for 2020
+* NCHS Provisional COVID-19 Deaths by Quarter and County
 
-  https://data.cdc.gov/NCHS/AH-Provisional-COVID-19-Deaths-by-Quarter-County-a/ypxr-mz8e
+  https://data.cdc.gov/NCHS/AH-Provisional-COVID-19-Death-Counts-by-Quarter-an/dnhi-s2bf
   
-  These public domain all-cause and COVID-19 mortality data were obtained for 2020 and compared to estimated expected deaths to calculate excess deaths.
-  The age groups in these data are not mutually exclusive.
-  To minimize the prevalence of suppression in these data, values from the two widest age groups, under 65 and 65 and older, were summed.
+  These public domain all-cause and COVID-19 mortality data were obtained for 2020-2021 and compared to estimated expected deaths to calculate excess deaths.
   
-  Note: Values for county-quarter-age group with fewer than 9 deaths are suppressed.
+  Note: Values for county-quarters with fewer than 9 deaths are suppressed in these data.
   
 * US Census Population Estimates
 
   Population estimates for 2015-2020 were retrieved from the [US Census Bureau Population Estimates](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-counties-total.html), because these data are not yet included in the Census Bureau Data API.
+  2020 population estimates were used for 2021.
   
   Note: This product uses Census Bureau data but is not endorsed or certified by the Census Bureau.
   
 # Excess Deaths Model
 
   The excess deaths model used began as an adaptation of *The Economist*'s [excess mortality model](https://github.com/TheEconomist/covid-19-excess-deaths-tracker), but has since diverged.
-  For details on model selection and performance, see [`/blob/main/docs/modeling_and_model_selection.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/docs/modeling_and_model_selection.md).
+  For details on model selection and performance, see [`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
   
   Given the large number of counties in the United States (over 3000), a linear mixed model with county, county set, and census division as random grouping factors was used to make estimation tractable.
   These random grouping factors enable each county, county set, and state to have their own intercepts in the final model.
@@ -135,7 +141,7 @@ Note that these estimates are only y-hat directly from the initial model, **not*
 
 # Model Performance
 
-For more details on model selection and performance, see [`/blob/main/docs/modeling_and_model_selection.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/docs/modeling_and_model_selection.md).
+For more details on model selection and performance, see [`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
 
 Because the COVID-19 pandemic only began in the United States partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in Q1 2020.
 

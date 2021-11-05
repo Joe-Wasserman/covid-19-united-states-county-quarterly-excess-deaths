@@ -29,12 +29,14 @@ united_states_county_monthly_total_deaths <- list.files(
     )
   )
 
-# Import NCHS Provisional COVID-19 Deaths by Quarter, County and Age for 2020 data
-# https://data.cdc.gov/NCHS/AH-Provisional-COVID-19-Deaths-by-Quarter-County-a/ypxr-mz8e
-# NOTE: County-quarter-agebands with < 10 deaths are censored in these data
+# Import NCHS Provisional COVID-19 Deaths by Quarter and County for 2020-2021
+# https://data.cdc.gov/NCHS/AH-Provisional-COVID-19-Death-Counts-by-Quarter-an/dnhi-s2bf
+# NOTE: County-quarters with < 10 deaths are censored in these data
+# NOTE: Dataset should have only one row per FIPS, but has duplicates for
+# 5 NY FIPS as of 2021-11-05: 36005, 26047, 36061, 36081, 36085
 try(
   united_states_county_quarterly_covid_deaths <- data.table::fread(
-    "https://data.cdc.gov/api/views/ypxr-mz8e/rows.csv",
+    "https://data.cdc.gov/api/views/dnhi-s2bf/rows.csv",
     keepLeadingZeros = TRUE
   )
 )
@@ -149,9 +151,10 @@ county_names <- fips_codes %>%
 
 # Format yearly county population data
 # Conform county FIPS codes to match other datasets
+# Fill forward 2020 values for 2021, 2021 county pop estimates unavailable
 # For details on county FIPS code changes, see:
 # https://www.ddorn.net/data/FIPS_County_Code_Changes.pdf
-united_states_county_yearly_population_complete <- united_states_county_yearly_population_2020 %>%
+united_states_county_yearly_population_interim <- united_states_county_yearly_population_2020 %>%
   filter(COUNTY != "000") %>%
   pivot_longer(
     cols = starts_with("POPESTIMATE"),
@@ -177,6 +180,11 @@ united_states_county_yearly_population_complete <- united_states_county_yearly_p
   group_by(country, region_code, state_code, year) %>%
   summarise(population = sum(population), .groups = "drop")
 
+united_states_county_yearly_population_complete <- united_states_county_yearly_population_interim %>%
+  filter(year == 2020L) %>%
+  mutate(year = 2021L) %>%
+  bind_rows(united_states_county_yearly_population_interim)
+
 # clean up county sets data
 # NOTE: County sets include all US counties in NCHS deaths data
 county_sets_clean <- county_sets %>%
@@ -190,7 +198,7 @@ county_sets_clean <- county_sets %>%
   tidyr::fill(county_set_code, .direction = "down")
 
 # Summarize historical county-month deaths by county-quarter
-# NOTE: Missing and censored values are treated as 0s
+# NOTE: Missing and censored values are not replaced
 united_states_county_quarterly_total_deaths <- united_states_county_monthly_total_deaths %>%
   transmute(
     country = "United States",
@@ -214,24 +222,24 @@ united_states_county_quarterly_total_deaths <- united_states_county_monthly_tota
     quarter, total_deaths
   )
 
-# Summarize 2020 county-quarter-ageband total and COVID deaths by county-quarter
+# Conform 2020-2021 county-quarter total and COVID deaths to data model
 # NOTE: Missing and censored values are treated as 0s
+# NOTE: Dataset should have only one row per FIPS, but has duplicates for
+# 5 NY FIPS as of 2021-11-05: 36005, 26047, 36061, 36081, 36085
 united_states_county_quarterly_covid_deaths_clean <- united_states_county_quarterly_covid_deaths %>%
-  filter(`Age Group` %in% c("65 years and over", "<65 years")) %>%
   transmute(
     country = "United States",
     region_code = `FIPS Code`,
     year = Year,
     quarter = Quarter,
-    start_date = mdy(`Start Date`),
-    end_date = mdy(`End Date`),
+    start_date = yq(paste(year, quarter, sep = "-")),
+    end_date = ceiling_date(start_date + months(2), unit = "month") - 1,
     days = as.integer(end_date - start_date + 1L),
     total_deaths = as.integer(`Total Deaths`),
     covid_deaths = as.integer(`COVID-19 Deaths`)
   ) %>%
   group_by(
-    country, region_code, year, quarter, start_date, end_date,
-    days
+    country, region_code, year, quarter, start_date, end_date, days
   ) %>%
   summarise(
     across(c(total_deaths, covid_deaths), sum),
@@ -239,7 +247,7 @@ united_states_county_quarterly_covid_deaths_clean <- united_states_county_quarte
   )
 
 # Union historical county-quarterly total deaths and
-# 2020 county-quarterly total and covid deaths
+# 2020-2021 county-quarterly total and covid deaths
 # Limits data to 50 states + Washington DC
 united_states_county_quarterly_deaths <- united_states_county_quarterly_total_deaths %>%
   bind_rows(united_states_county_quarterly_covid_deaths_clean) %>%
@@ -279,8 +287,12 @@ united_states_county_quarterly_deaths <- united_states_county_quarterly_total_de
     total_deaths, covid_deaths, total_deaths_per_day
   )
 
+# subset total data to pre-2020 training dataset for icc
+# NOTE: full dataset used for estimate_excess_deaths(): internally filters by date
+training_data <- filter(united_states_county_quarterly_deaths, year < 2020L)
+
 ## ---- icc ----
-# Examine ICC for alternative nesting structures
+# Examine ICC 2015-2019 data for alternative nesting structures
 icc <- list(
   c("region_code", "quarter"),
   c("region_code", "county_set_code", "quarter"),
@@ -300,7 +312,7 @@ icc <- list(
     ~ multilevelTools::iccMixed(
       dv = "total_deaths_per_day",
       id = .x,
-      data = united_states_county_quarterly_deaths
+      data = training_data
     )
   )
 
@@ -466,7 +478,6 @@ model_out <- lmm_formulas %>%
       df = united_states_county_quarterly_deaths,
       expected_deaths_formula = .x,
       period = "quarter",
-      calculate = TRUE,
       train_model = TRUE
     )
   )
@@ -480,27 +491,18 @@ model_performance <- model_out %>%
   ) %>%
   performance::compare_performance()
 
-expected_deaths <- model_out %>%
-  furrr::future_map(
-    .,
-    ~ united_states_county_quarterly_deaths %>%
-      mutate(year_zero = year - 2015L) %>%
-      mutate(
-        expected_deaths = predict(
-          object = .x[[1]],
-          newdata = .,
-          type = "response",
-          allow.new.levels = TRUE
-        ) * days
-      )
-  )
-
 ## ---- validation-performance ----
 # compare model mean squared error on 2020 Q1 validation set
+expected_deaths <- model_out %>%
+  map(
+    .,
+    ~ .x[[2]]
+  )
+
 model_mse <- expected_deaths %>%
   imap_dfr(
     ~ .x %>%
-      filter(year == 2020, quarter == "1") %>%
+      filter(year == 2020L, quarter == "1") %>%
       summarise(
         model = .y,
         mse = mean(
@@ -558,17 +560,17 @@ model_volatility_summary <- data_fitted_outliers_only %>%
 ## ---- plot-volatility ----
 plot_ts_with_outliers <- function(region_code, fitted_ts, fitted_outliers) {
   plot_out <- autoplot(
-    object = fitted_ts,
+    object = {{ fitted_ts }},
     series = "model-fitted",
     color = "gray",
     lwd = 1
   ) +
     geom_point(
-      data = fitted_outliers,
+      data = {{ fitted_outliers }},
       aes(x = index, y = replacements),
       col = "blue"
     ) +
-    labs(x = NULL, y = NULL, title = region_code) +
+    labs(x = NULL, y = NULL, title = {{ region_code }}) +
     theme_minimal() +
     theme(
       text = element_text(size = 8),
@@ -579,48 +581,46 @@ plot_ts_with_outliers <- function(region_code, fitted_ts, fitted_outliers) {
 fitted_outlier_plots <- data_fitted_outliers_only %>%
   furrr::future_map(
     .,
-    ~ .x %>%
-      select(region_code, fitted_ts, fitted_outliers) %>%
-      pmap(., plot_ts_with_outliers) %>%
-      patchwork::wrap_plots()
+    ~ if (nrow(.x) > 0) {
+      .x %>%
+        select(region_code, fitted_ts, fitted_outliers) %>%
+        pmap(., plot_ts_with_outliers) %>%
+        patchwork::wrap_plots()
+    }
   )
 
 ## ---- final-model ----
 
-# Estimate expected and excess deaths for 2020 using selected model
+united_states_county_quarterly_results <- model_out[[8]]
 
-# run the final selected model
-united_states_county_quarterly_results <- estimate_excess_deaths(
-  df = united_states_county_quarterly_deaths,
-  expected_deaths_formula = lmm_formulas[[8]],
-  period = "quarter",
-  calculate = TRUE,
-  train_model = TRUE
-)
+# export the final selected model
+
+model_out_path <- file.path(here::here(), "results/united_states_county_quarterly_model.RDS")
+
+if (file.exists(model_out_path)) file.remove(model_out_path)
 
 # export model object
-saveRDS(
-  united_states_county_quarterly_results[[1]],
-  file.path(
-    here::here(),
-    "results/united_states_county_quarterly_model.RDS"
-  )
-)
+saveRDS(united_states_county_quarterly_results[[1]], model_out_path)
 
 # export predicted values
+
+results_out_path <- file.path(here::here(), "results/united_states_county_quarterly_excess_deaths_estimates.csv")
+
+if (file.exists(results_out_path)) file.remove(results_out_path)
+
 data.table::fwrite(
   united_states_county_quarterly_results[[2]],
-  file.path(
-    here::here(),
-    "results/united_states_county_quarterly_excess_deaths_estimates.csv"
-  )
+  results_out_path,
+  append = FALSE
 )
 
 # export model-fitted values from training data
+fitted_out_path <- file.path(here::here(), "results/united_states_county_quarterly_fitted_deaths_per_day_estimates.csv")
+
+if (file.exists(fitted_out_path)) file.remove(fitted_out_path)
+
 data.table::fwrite(
   united_states_county_quarterly_results[[3]],
-  file.path(
-    here::here(),
-    "results/united_states_county_quarterly_fitted_deaths_per_day_estimates.csv"
-  )
+  fitted_out_path,
+  append = FALSE
 )
