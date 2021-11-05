@@ -2,7 +2,7 @@ COVID-19 United States Excess Deaths by county and quarter: Model
 comparison and selection
 ================
 
-<!-- modeling_and_model_selection.md is generated from modeling_and_model_selection.Rmd. Please edit that file -->
+<!-- /results/README.md is generated from /results/README.Rmd. Please edit that file -->
 
 # Model comparison strategy
 
@@ -339,7 +339,11 @@ identified using `tsoutliers()` from the
 {[forecast](https://cran.r-project.org/package=forecast)} R package.
 Using this method, only models 2 and 3 had no outliers. Potential
 outliers identified for other states were concentrated in several
-Mountain West counties with zero non-censored values 2015-2019.
+Mountain West counties with zero non-censored values 2015-2019, and
+therefore mostly predicted values of zero. In the following plots for
+each model and county with outliers, grey lines are predicted values and
+blue dots represent values that `tsoutliers()` suggests as replacements
+for outliers.
 
 | model | outlier_regions | outlier_total |
 |------:|----------------:|--------------:|
@@ -358,12 +362,60 @@ Mountain West counties with zero non-censored values 2015-2019.
 
 Summary of Model Outliers
 
-![](modeling_and_model_selection_files/plot%20volatility%20output-1.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-2.png)<!-- -->
+    ## [[1]]
 
-    ## NULL
-    ## NULL
+![](README_files/plot%20volatility%20output-1.png)<!-- -->
 
-![](modeling_and_model_selection_files/plot%20volatility%20output-3.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-4.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-5.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-6.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-7.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-8.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-9.png)<!-- -->![](modeling_and_model_selection_files/plot%20volatility%20output-10.png)<!-- -->
+    ## 
+    ## [[2]]
+
+![](README_files/plot%20volatility%20output-2.png)<!-- -->
+
+    ## 
+    ## [[3]]
+    ## NULL
+    ## 
+    ## [[4]]
+    ## NULL
+    ## 
+    ## [[5]]
+
+![](README_files/plot%20volatility%20output-3.png)<!-- -->
+
+    ## 
+    ## [[6]]
+
+![](README_files/plot%20volatility%20output-4.png)<!-- -->
+
+    ## 
+    ## [[7]]
+
+![](README_files/plot%20volatility%20output-5.png)<!-- -->
+
+    ## 
+    ## [[8]]
+
+![](README_files/plot%20volatility%20output-6.png)<!-- -->
+
+    ## 
+    ## [[9]]
+
+![](README_files/plot%20volatility%20output-7.png)<!-- -->
+
+    ## 
+    ## [[10]]
+
+![](README_files/plot%20volatility%20output-8.png)<!-- -->
+
+    ## 
+    ## [[11]]
+
+![](README_files/plot%20volatility%20output-9.png)<!-- -->
+
+    ## 
+    ## [[12]]
+
+![](README_files/plot%20volatility%20output-10.png)<!-- -->
 
 # Final model
 
@@ -417,7 +469,7 @@ sessionInfo()
 ## 
 ## other attached packages:
 ##  [1] knitr_1.31        lme4_1.1-27.1     Matrix_1.3-2      aweek_1.0.2      
-##  [5] lubridate_1.7.10  data.table_1.14.0 tidycensus_0.11.4 furrr_0.2.2      
+##  [5] lubridate_1.7.10  data.table_1.14.2 tidycensus_0.11.4 furrr_0.2.2      
 ##  [9] future_1.21.0     forcats_0.5.1     stringr_1.4.0     dplyr_1.0.5      
 ## [13] purrr_0.3.4       readr_2.0.2       tidyr_1.1.3       tibble_3.1.0     
 ## [17] ggplot2_3.3.5     tidyverse_1.3.1  

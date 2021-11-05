@@ -591,34 +591,36 @@ fitted_outlier_plots <- data_fitted_outliers_only %>%
 
 ## ---- final-model ----
 
-# Export expected and excess deaths for 2020 using selected model
-
-# export the final selected model
 united_states_county_quarterly_results <- model_out[[8]]
 
+# export the final selected model
+
+model_out_path <- file.path(here::here(), "results/united_states_county_quarterly_model.RDS")
+
+if (file.exists(model_out_path)) file.remove(model_out_path)
+
 # export model object
-saveRDS(
-  united_states_county_quarterly_results[[1]],
-  file.path(
-    here::here(),
-    "results/united_states_county_quarterly_model.RDS"
-  )
-)
+saveRDS(united_states_county_quarterly_results[[1]], model_out_path)
 
 # export predicted values
+
+results_out_path <- file.path(here::here(), "results/united_states_county_quarterly_excess_deaths_estimates.csv")
+
+if (file.exists(results_out_path)) file.remove(results_out_path)
+
 data.table::fwrite(
   united_states_county_quarterly_results[[2]],
-  file.path(
-    here::here(),
-    "results/united_states_county_quarterly_excess_deaths_estimates.csv"
-  )
+  results_out_path,
+  append = FALSE
 )
 
 # export model-fitted values from training data
+fitted_out_path <- file.path(here::here(), "results/united_states_county_quarterly_fitted_deaths_per_day_estimates.csv")
+
+if (file.exists(fitted_out_path)) file.remove(fitted_out_path)
+
 data.table::fwrite(
   united_states_county_quarterly_results[[3]],
-  file.path(
-    here::here(),
-    "results/united_states_county_quarterly_fitted_deaths_per_day_estimates.csv"
-  )
+  fitted_out_path,
+  append = FALSE
 )

@@ -3,7 +3,7 @@ title: "COVID-19 United States Excess Deaths by county and quarter: Model compar
 output: github_document
 ---
 
-<!-- modeling_and_model_selection.md is generated from modeling_and_model_selection.Rmd. Please edit that file -->
+<!-- /results/README.md is generated from /results/README.Rmd. Please edit that file -->
 
 ```{r setup, include=FALSE}
 library(tidyverse)
@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   include = FALSE,
   dev.args = list(png = list(type = "cairo")), dpi = 96,
-  fig.path = "README/"
+  fig.path = "README_files/"
 )
 
 options(
@@ -125,7 +125,8 @@ model_mse %>%
 
 To evaluate the extent of outlier model predictions, including unexpectedly large changes quarter-to-quarter, time series outliers were identified using `tsoutliers()` from the {[forecast](https://cran.r-project.org/package=forecast)} R package.
 Using this method, only models 2 and 3 had no outliers.
-Potential outliers identified for other states were concentrated in several Mountain West counties with zero non-censored values 2015-2019.
+Potential outliers identified for other states were concentrated in several Mountain West counties with zero non-censored values 2015-2019, and therefore mostly predicted values of zero.
+In the following plots for each model and county with outliers, grey lines are predicted values and blue dots represent values that `tsoutliers()` suggests as replacements for outliers.
 
 ```{r volatility}
 ```
@@ -143,8 +144,7 @@ model_volatility_summary %>%
 ```
 
 ```{r plot volatility output, include=TRUE, error=FALSE}
-try(fitted_outlier_plots %>%
-  walk(print))
+print(fitted_outlier_plots)
 ```
 
 # Final model
