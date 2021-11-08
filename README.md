@@ -3,6 +3,8 @@ COVID-19 United States Excess Deaths by county and quarter
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# Overview
+
 This repository contains code and data to estimate **expected deaths**
 and **excess deaths** in the United States in 2020 and 2021 by
 **county** and **quarter**. This model estimates that there were about
@@ -11,6 +13,13 @@ first two quarters of 2021, for a total of 550223.
 
 Estimated excess deaths are available at
 [`/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv).
+
+#### Nationwide United States Mortality, 2015 through June 2021
+
+![](README_files/results%20summary-1.png)<!-- -->
+
+Excess mortality for the quarters in which total deaths exceeded
+expected deaths are highlighted in blue.
 
 # Data Sources
 
@@ -147,41 +156,43 @@ sessionInfo()
 ## other attached packages:
 ##  [1] lmerTest_3.1-3          lme4_1.1-27.1           Matrix_1.3-2           
 ##  [4] texPreview_1.5          tinytex_0.34            knitr_1.31             
-##  [7] equatiomatic_0.3.0.9000 lubridate_1.7.10        data.table_1.14.0      
-## [10] forcats_0.5.1           stringr_1.4.0           dplyr_1.0.5            
-## [13] purrr_0.3.4             readr_2.0.2             tidyr_1.1.3            
-## [16] tibble_3.1.0            ggplot2_3.3.5           tidyverse_1.3.1        
+##  [7] equatiomatic_0.3.0.9000 lubridate_1.7.10        data.table_1.14.2      
+## [10] ggh4x_0.2.0             forcats_0.5.1           stringr_1.4.0          
+## [13] dplyr_1.0.5             purrr_0.3.4             readr_2.0.2            
+## [16] tidyr_1.1.3             tibble_3.1.0            ggplot2_3.3.5          
+## [19] tidyverse_1.3.1        
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] nlme_3.1-152          fs_1.5.0              httr_1.4.2           
-##  [4] rprojroot_2.0.2       numDeriv_2016.8-1.1   TMB_1.7.20           
-##  [7] tools_4.0.4           backports_1.2.1       utf8_1.2.1           
-## [10] R6_2.5.0              svgPanZoom_0.3.4      mgcv_1.8-33          
-## [13] DBI_1.1.1             colorspace_2.0-0      withr_2.4.2          
-## [16] tidyselect_1.1.0      curl_4.3              compiler_4.0.4       
-## [19] cli_3.0.1             rvest_1.0.0           xml2_1.3.2           
-## [22] desc_1.3.0            labeling_0.4.2        scales_1.1.1         
-## [25] askpass_1.1           digest_0.6.27         minqa_1.2.4          
-## [28] rmarkdown_2.7         base64enc_0.1-3       pkgconfig_2.0.3      
-## [31] htmltools_0.5.1.1     highr_0.8             dbplyr_2.1.1         
-## [34] fastmap_1.1.0         rlang_0.4.10          readxl_1.3.1         
-## [37] rstudioapi_0.13       shiny_1.6.0           farver_2.1.0         
-## [40] generics_0.1.0        jsonlite_1.7.2        broom.mixed_0.2.6    
-## [43] magrittr_2.0.1        Rcpp_1.0.7            munsell_0.5.0        
-## [46] fansi_0.4.2           clipr_0.7.1           lifecycle_1.0.0      
-## [49] stringi_1.5.3         whisker_0.4           yaml_2.2.1           
-## [52] MASS_7.3-53           plyr_1.8.6            grid_4.0.4           
-## [55] ggrepel_0.9.1         promises_1.2.0.1      crayon_1.4.1         
-## [58] details_0.2.1         lattice_0.20-41       haven_2.3.1          
-## [61] splines_4.0.4         hms_1.0.0             magick_2.7.3         
-## [64] pillar_1.6.0          boot_1.3-26           reshape2_1.4.4       
-## [67] reprex_2.0.0          glue_1.4.2            evaluate_0.14        
-## [70] pdftools_2.3.1        qpdf_1.1              V8_3.4.0             
-## [73] modelr_0.1.8          nloptr_1.2.2.2        vctrs_0.3.7          
-## [76] png_0.1-7             tzdb_0.1.2            httpuv_1.6.0         
-## [79] cellranger_1.1.0      gtable_0.3.0          rematch2_2.1.2       
-## [82] assertthat_0.2.1      cachem_1.0.4          xfun_0.26            
-## [85] mime_0.10             xtable_1.8-4          broom_0.7.9          
-## [88] coda_0.19-4           later_1.2.0           memoise_2.0.0        
-## [91] ellipsis_0.3.1        rdocsyntax_0.4.1.9000 here_1.0.1
+##  [1] rdocsyntax_0.4.1.9000 minqa_1.2.4           colorspace_2.0-0     
+##  [4] ellipsis_0.3.1        rprojroot_2.0.2       base64enc_0.1-3      
+##  [7] fs_1.5.0              rstudioapi_0.13       farver_2.1.0         
+## [10] ggrepel_0.9.1         fansi_0.4.2           xml2_1.3.2           
+## [13] splines_4.0.4         cachem_1.0.4          jsonlite_1.7.2       
+## [16] nloptr_1.2.2.2        broom_0.7.9           dbplyr_2.1.1         
+## [19] png_0.1-7             broom.mixed_0.2.6     shiny_1.6.0          
+## [22] clipr_0.7.1           compiler_4.0.4        httr_1.4.2           
+## [25] backports_1.2.1       assertthat_0.2.1      fastmap_1.1.0        
+## [28] cli_3.0.1             svgPanZoom_0.3.4      later_1.2.0          
+## [31] htmltools_0.5.1.1     tools_4.0.4           coda_0.19-4          
+## [34] gtable_0.3.0          glue_1.4.2            reshape2_1.4.4       
+## [37] V8_3.4.0              Rcpp_1.0.7            cellranger_1.1.0     
+## [40] vctrs_0.3.7           pdftools_2.3.1        nlme_3.1-152         
+## [43] xfun_0.26             rvest_1.0.0           mime_0.10            
+## [46] lifecycle_1.0.0       MASS_7.3-53           scales_1.1.1         
+## [49] hms_1.0.0             promises_1.2.0.1      rematch2_2.1.2       
+## [52] TMB_1.7.20            yaml_2.2.1            curl_4.3             
+## [55] memoise_2.0.0         stringi_1.5.3         highr_0.8            
+## [58] desc_1.3.0            boot_1.3-26           rlang_0.4.10         
+## [61] pkgconfig_2.0.3       evaluate_0.14         lattice_0.20-41      
+## [64] labeling_0.4.2        tidyselect_1.1.0      here_1.0.1           
+## [67] plyr_1.8.6            magrittr_2.0.1        R6_2.5.0             
+## [70] magick_2.7.3          generics_0.1.0        DBI_1.1.1            
+## [73] pillar_1.6.0          haven_2.3.1           whisker_0.4          
+## [76] withr_2.4.2           mgcv_1.8-33           modelr_0.1.8         
+## [79] crayon_1.4.1          utf8_1.2.1            tzdb_0.1.2           
+## [82] rmarkdown_2.7         grid_4.0.4            readxl_1.3.1         
+## [85] qpdf_1.1              reprex_2.0.0          digest_0.6.27        
+## [88] xtable_1.8-4          httpuv_1.6.0          numDeriv_2016.8-1.1  
+## [91] details_0.2.1         munsell_0.5.0         viridisLite_0.4.0    
+## [94] askpass_1.1
 ```

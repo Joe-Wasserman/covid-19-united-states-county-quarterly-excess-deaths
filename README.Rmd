@@ -7,6 +7,7 @@ output: github_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(ggh4x)
 library(data.table)
 library(lubridate)
 library(equatiomatic)
@@ -29,6 +30,9 @@ options(
   knitr.kable.NA = "n/a"
 )
 ```
+
+
+# Overview
 
 ```{r import}
 lmer_model <- readRDS(
@@ -61,6 +65,94 @@ This repository contains code and data to estimate **expected deaths** and **exc
 This model estimates that there were about `r round(total_excess_deaths_2020)` excess deaths in the United States in 2020 and `r round(total_excess_deaths_2021)` in the first two quarters of 2021, for a total of `r round(sum(total_excess_deaths_2020, total_excess_deaths_2021))`.
 
 Estimated excess deaths are available at [`/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv).
+
+
+#### Nationwide United States Mortality, 2015 through June 2021
+```{r results summary, message=FALSE, warning=FALSE}
+
+deaths_nationwide_summary <- united_states_county_quarterly_excess_deaths_estimates %>% 
+  group_by(start_date) %>% 
+  summarise(
+    across(c(total_deaths, expected_deaths, excess_deaths), sum, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  mutate(period = date(start_date))
+
+g <- ggplot(deaths_nationwide_summary, aes(x = period))
+
+p <- g +
+  geom_line(
+    aes(y = expected_deaths, color = "Expected deaths")
+  ) +
+  geom_line(
+    aes(y = total_deaths, color = "Total deaths")
+  ) +
+  stat_difference(
+    aes(ymin = expected_deaths, ymax = total_deaths),
+    levels = c("Excess mortality", NA, NA),
+    alpha = .7
+  ) +
+  geom_vline(
+    xintercept = date("2020-04-01"),
+    linetype = "dashed"
+  ) +
+  annotate(
+    geom = "curve", 
+    x = date("2018-10-01"), 
+    y = 880000, 
+    xend = date("2020-03-20"), 
+    yend = 850000, 
+    curvature = -.2, 
+    arrow = arrow(length = unit(3, "mm"))
+  ) +
+  annotate(
+    geom = "text", 
+    x = date("2018-09-20"), 
+    y = 880000, 
+    label = "April 2020 - June 2020, the beginning of the\nCOVID-19 pandemic in the United States", 
+    hjust = "right"
+  ) +
+  annotate(
+    geom = "curve", 
+    x = date("2019-12-01"), 
+    y = 630000, 
+    xend = date("2021-04-01"), 
+    yend = 720000, 
+    curvature = .4, 
+    arrow = arrow(length = unit(3, "mm"))
+  ) +
+  annotate(
+    geom = "text", 
+    x = date("2019-11-20"), 
+    y = 620000, 
+    label = "Recent provisional mortality data\nare underreported due to reporting lags",
+    hjust = "right"
+  ) +
+  scale_color_viridis_d(option = "cividis", end = .6) +
+  scale_fill_viridis_d(option = "cividis", na.translate = FALSE) +
+  scale_x_date(
+    date_breaks = "1 year",
+    date_minor_breaks = "3 months",
+    labels = scales::label_date_short()
+  ) +
+  guides(
+    fill = guide_legend(NULL),
+    color = guide_legend(NULL)
+  ) +
+  labs(
+    x = "Quarter",
+    y = "Deaths"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  )
+
+print(p)
+```
+
+Excess mortality for the quarters in which total deaths exceeded expected deaths are highlighted in blue.
 
 # Data Sources
 
