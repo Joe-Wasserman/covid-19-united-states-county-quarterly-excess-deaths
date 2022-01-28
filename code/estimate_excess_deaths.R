@@ -62,9 +62,9 @@ estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_
     mutate(
       expected_deaths = pmax(expected_deaths, 0),
       excess_deaths = total_deaths - expected_deaths,
-      non_covid_deaths = total_deaths - covid_deaths,
+      # non_covid_deaths = total_deaths - covid_deaths,
       region_code = as.character(region_code),
-      covid_deaths_per_100k = covid_deaths / population * 100000,
+      # covid_deaths_per_100k = covid_deaths / population * 100000,
       excess_deaths_per_100k = excess_deaths / population * 100000,
       excess_deaths_pct_change =
         ((expected_deaths + excess_deaths) / expected_deaths) - 1
@@ -86,11 +86,11 @@ estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_
     excess_deaths <- excess_deaths %>%
       mutate(
         total_deaths_per_7_days = total_deaths / days * 7,
-        covid_deaths_per_7_days = covid_deaths / days * 7,
+        # covid_deaths_per_7_days = covid_deaths / days * 7,
         expected_deaths_per_7_days = expected_deaths / days * 7,
         excess_deaths_per_7_days = excess_deaths / days * 7,
-        non_covid_deaths_per_7_days = non_covid_deaths / days * 7,
-        covid_deaths_per_100k_per_7_days = covid_deaths_per_100k / days * 7,
+        # non_covid_deaths_per_7_days = non_covid_deaths / days * 7,
+        # covid_deaths_per_100k_per_7_days = covid_deaths_per_100k / days * 7,
         excess_deaths_per_100k_per_7_days = excess_deaths_per_100k / days * 7
       )
   }

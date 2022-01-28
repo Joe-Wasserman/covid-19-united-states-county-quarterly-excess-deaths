@@ -1,4 +1,4 @@
-COVID-19 United States Excess Deaths by county and quarter: Model
+COVID-19 United States Excess Deaths by county and month: Model
 comparison and selection
 ================
 
@@ -9,9 +9,9 @@ comparison and selection
 Several models with alternate specifications of random grouping factors
 were evaluated. To select a model, they were compared in terms of:
 
-1.  Performance on 2015-2019 training data
+1.  Performance on January, 2011 - February, 2020 training data
 
-2.  Performance on Q1 2020 data
+2.  Performance on March, 2020 data
 
 3.  Outlier estimates in training data
 
@@ -20,97 +20,70 @@ were evaluated. To select a model, they were compared in terms of:
 First, we examined the intraclass correlation coefficients for each
 specification to evaluate their reasonableness.
 
-| Var         |  Sigma |   ICC |
-|:------------|-------:|------:|
-| region_code | 49.275 | 0.994 |
-| quarter     |  0.040 | 0.001 |
-| Residual    |  0.278 | 0.006 |
+| Var             |  Sigma |   ICC |
+|:----------------|-------:|------:|
+| region_code     |  2.006 | 0.027 |
+| county_set_code | 70.706 | 0.966 |
+| month           |  0.032 | 0.000 |
+| Residual        |  0.477 | 0.007 |
 
 | Var             |  Sigma |   ICC |
 |:----------------|-------:|------:|
-| region_code     |  2.843 | 0.037 |
-| county_set_code | 74.225 | 0.959 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.004 |
+| region_code     |  2.007 | 0.027 |
+| county_set_code | 66.883 | 0.890 |
+| month           |  0.032 | 0.000 |
+| census_division |  5.727 | 0.076 |
+| Residual        |  0.477 | 0.006 |
 
 | Var             |  Sigma |   ICC |
 |:----------------|-------:|------:|
-| region_code     | 46.443 | 0.893 |
-| census_division |  5.263 | 0.101 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.005 |
+| region_code     |  2.007 | 0.027 |
+| county_set_code | 68.333 | 0.910 |
+| month           |  0.032 | 0.000 |
+| census_region   |  4.254 | 0.057 |
+| Residual        |  0.477 | 0.006 |
+
+| Var             |  Sigma |   ICC |
+|:----------------|-------:|------:|
+| region_code     |  2.008 | 0.027 |
+| county_set_code | 63.007 | 0.858 |
+| state           |  7.879 | 0.107 |
+| month           |  0.032 | 0.000 |
+| Residual        |  0.477 | 0.006 |
+
+| Var             |  Sigma |   ICC |
+|:----------------|-------:|------:|
+| region_code     | 36.509 | 0.813 |
+| state           |  5.141 | 0.114 |
+| month           |  0.032 | 0.001 |
+| census_division |  2.767 | 0.062 |
+| Residual        |  0.477 | 0.011 |
 
 | Var           |  Sigma |   ICC |
 |:--------------|-------:|------:|
-| region_code   | 47.426 | 0.912 |
-| census_region |  4.266 | 0.082 |
-| quarter       |  0.040 | 0.001 |
-| Residual      |  0.278 | 0.005 |
+| region_code   | 36.504 | 0.802 |
+| state         |  5.668 | 0.125 |
+| month         |  0.032 | 0.001 |
+| census_region |  2.843 | 0.062 |
+| Residual      |  0.477 | 0.010 |
 
 | Var             |  Sigma |   ICC |
 |:----------------|-------:|------:|
-| region_code     |  2.846 | 0.036 |
-| county_set_code | 70.185 | 0.884 |
-| census_division |  6.079 | 0.077 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.004 |
+| region_code     |  2.008 | 0.027 |
+| county_set_code | 63.038 | 0.854 |
+| state           |  5.480 | 0.074 |
+| month           |  0.032 | 0.000 |
+| census_division |  2.820 | 0.038 |
+| Residual        |  0.477 | 0.006 |
 
 | Var             |  Sigma |   ICC |
 |:----------------|-------:|------:|
-| region_code     |  2.845 | 0.036 |
-| county_set_code | 71.726 | 0.904 |
-| census_region   |  4.468 | 0.056 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.004 |
-
-| Var         |  Sigma |   ICC |
-|:------------|-------:|------:|
-| region_code | 43.610 | 0.839 |
-| state       |  8.037 | 0.155 |
-| quarter     |  0.040 | 0.001 |
-| Residual    |  0.278 | 0.005 |
-
-| Var             |  Sigma |   ICC |
-|:----------------|-------:|------:|
-| region_code     |  2.847 | 0.037 |
-| county_set_code | 66.024 | 0.851 |
-| state           |  8.390 | 0.108 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.004 |
-
-| Var             |  Sigma |   ICC |
-|:----------------|-------:|------:|
-| region_code     | 43.634 | 0.833 |
-| state           |  5.426 | 0.104 |
-| census_division |  3.015 | 0.058 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.005 |
-
-| Var           |  Sigma |   ICC |
-|:--------------|-------:|------:|
-| region_code   | 43.627 | 0.824 |
-| state         |  5.906 | 0.112 |
-| census_region |  3.097 | 0.058 |
-| quarter       |  0.040 | 0.001 |
-| Residual      |  0.278 | 0.005 |
-
-| Var             |  Sigma |   ICC |
-|:----------------|-------:|------:|
-| region_code     |  2.847 | 0.036 |
-| county_set_code | 66.061 | 0.846 |
-| state           |  5.899 | 0.076 |
-| census_division |  2.931 | 0.038 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.004 |
-
-| Var             |  Sigma |   ICC |
-|:----------------|-------:|------:|
-| region_code     |  2.847 | 0.036 |
-| county_set_code | 66.048 | 0.842 |
-| state           |  6.541 | 0.083 |
-| census_region   |  2.662 | 0.034 |
-| quarter         |  0.040 | 0.001 |
-| Residual        |  0.278 | 0.004 |
+| region_code     |  2.008 | 0.027 |
+| county_set_code | 63.028 | 0.849 |
+| state           |  6.128 | 0.083 |
+| month           |  0.032 | 0.000 |
+| census_region   |  2.558 | 0.034 |
+| Residual        |  0.477 | 0.006 |
 
 # Model specifications
 
@@ -126,55 +99,55 @@ strictControl <- lmerControl(optCtrl = list(
 # NOTE: lme4::lmer() does not require nested random grouping factor syntax
 lmm_formulas <- list(
   # 1
-  as.formula(
-    glue::glue(
-      "total_deaths_per_day ~ 1 +
-      population_z +
-      year_zero +
-      quarter +
-      (1 | region_code)"
-    )
-  ),
+  # as.formula(
+  #   glue::glue(
+  #     "total_deaths_per_day ~ 1 +
+  #     population_z +
+  #     year_zero +
+  #     month +
+  #     (1 | region_code)"
+  #   )
+  # ),
   # 2
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code)"
     )
   ),
   # 3
-  as.formula(
-    glue::glue(
-      "total_deaths_per_day ~ 1 +
-      population_z +
-      year_zero +
-      quarter +
-      (1 | region_code) +
-      (1 | census_division)"
-    )
-  ),
+  # as.formula(
+  #   glue::glue(
+  #     "total_deaths_per_day ~ 1 +
+  #     population_z +
+  #     year_zero +
+  #     month +
+  #     (1 | region_code) +
+  #     (1 | census_division)"
+  #   )
+  # ),
   # 4
-  as.formula(
-    glue::glue(
-      "total_deaths_per_day ~ 1 +
-      population_z +
-      year_zero +
-      quarter +
-      (1 | region_code) +
-      (1 | census_region)"
-    )
-  ),
+  # as.formula(
+  #   glue::glue(
+  #     "total_deaths_per_day ~ 1 +
+  #     population_z +
+  #     year_zero +
+  #     month +
+  #     (1 | region_code) +
+  #     (1 | census_region)"
+  #   )
+  # ),
   # 5
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | census_division)"
@@ -186,7 +159,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | census_region)"
@@ -198,7 +171,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | state)"
     )
@@ -209,7 +182,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | state)"
@@ -221,7 +194,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | state) +
       (1 | census_division)"
@@ -233,7 +206,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | state) +
       (1 | census_region)"
@@ -245,7 +218,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | state) +
@@ -258,7 +231,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | state) +
@@ -272,69 +245,64 @@ model_out <- lmm_formulas %>%
   furrr::future_map(
     .,
     ~ estimate_excess_deaths(
-      df = united_states_county_quarterly_deaths,
+      df = united_states_county_monthly_deaths,
       expected_deaths_formula = .x,
-      period = "quarter",
+      period = "month",
       train_model = TRUE
     )
   )
 ```
 
-# Performance on 2015-2019 training data
+# Performance on training data
 
 Compare model performance indices for all five models. Although many
 models perform similarly for these metrics, when taken together and with
-a focus on AIC and BIC, model 8 (counties nested within county sets
-nested within states) and model 12 (counties nested within county sets
+a focus on AIC and BIC, model 5 (counties nested within county sets
+nested within states) and model 9 (counties nested within county sets
 nested within states nested within census regions) appear to be the top
 two contenders.
 
-| Name     | Model           |   AIC | AIC_wt |   BIC | BIC_wt | R2_conditional | R2_marginal |   ICC |  RMSE | Sigma |
-|:---------|:----------------|------:|-------:|------:|-------:|---------------:|------------:|------:|------:|------:|
-| Model 1  | lmerModLmerTest | 78174 |  0.000 | 78244 |  0.000 |          0.995 |       0.960 | 0.887 | 0.494 | 0.509 |
-| Model 2  | lmerModLmerTest | 76762 |  0.000 | 76841 |  0.000 |          0.996 |       0.941 | 0.927 | 0.494 | 0.508 |
-| Model 3  | lmerModLmerTest | 78079 |  0.000 | 78157 |  0.000 |          0.995 |       0.958 | 0.890 | 0.494 | 0.509 |
-| Model 4  | lmerModLmerTest | 78105 |  0.000 | 78183 |  0.000 |          0.995 |       0.958 | 0.892 | 0.494 | 0.509 |
-| Model 5  | lmerModLmerTest | 76706 |  0.000 | 76793 |  0.000 |          0.996 |       0.940 | 0.928 | 0.494 | 0.508 |
-| Model 6  | lmerModLmerTest | 76725 |  0.000 | 76812 |  0.000 |          0.996 |       0.939 | 0.929 | 0.494 | 0.508 |
-| Model 7  | lmerModLmerTest | 77937 |  0.000 | 78015 |  0.000 |          0.995 |       0.958 | 0.889 | 0.494 | 0.509 |
-| Model 8  | lmerModLmerTest | 76615 |  0.244 | 76702 |  0.962 |          0.996 |       0.941 | 0.925 | 0.494 | 0.508 |
-| Model 9  | lmerModLmerTest | 77935 |  0.000 | 78022 |  0.000 |          0.995 |       0.958 | 0.890 | 0.494 | 0.509 |
-| Model 10 | lmerModLmerTest | 77933 |  0.000 | 78020 |  0.000 |          0.995 |       0.958 | 0.891 | 0.494 | 0.509 |
-| Model 11 | lmerModLmerTest | 76614 |  0.285 | 76710 |  0.014 |          0.996 |       0.941 | 0.926 | 0.494 | 0.508 |
-| Model 12 | lmerModLmerTest | 76613 |  0.471 | 76709 |  0.024 |          0.996 |       0.941 | 0.926 | 0.494 | 0.508 |
+| Name    | Model           |    AIC | AIC_wt |    BIC | BIC_wt | R2_conditional | R2_marginal |   ICC |  RMSE | Sigma |
+|:--------|:----------------|-------:|-------:|-------:|-------:|---------------:|------------:|------:|------:|------:|
+| Model 1 | lmerModLmerTest | 510963 |  0.000 | 511142 |  0.000 |          0.995 |       0.899 | 0.954 | 0.613 | 0.616 |
+| Model 2 | lmerModLmerTest | 510917 |  0.000 | 511106 |  0.000 |          0.995 |       0.898 | 0.955 | 0.613 | 0.616 |
+| Model 3 | lmerModLmerTest | 510931 |  0.000 | 511119 |  0.000 |          0.995 |       0.897 | 0.955 | 0.613 | 0.616 |
+| Model 4 | lmerModLmerTest | 513598 |  0.000 | 513777 |  0.000 |          0.995 |       0.948 | 0.900 | 0.613 | 0.617 |
+| Model 5 | lmerModLmerTest | 510877 |  0.299 | 511065 |  0.988 |          0.995 |       0.901 | 0.953 | 0.613 | 0.616 |
+| Model 6 | lmerModLmerTest | 513599 |  0.000 | 513787 |  0.000 |          0.995 |       0.948 | 0.900 | 0.613 | 0.617 |
+| Model 7 | lmerModLmerTest | 513597 |  0.000 | 513786 |  0.000 |          0.995 |       0.948 | 0.900 | 0.613 | 0.617 |
+| Model 8 | lmerModLmerTest | 510878 |  0.189 | 511077 |  0.003 |          0.995 |       0.901 | 0.953 | 0.613 | 0.616 |
+| Model 9 | lmerModLmerTest | 510876 |  0.511 | 511075 |  0.009 |          0.995 |       0.901 | 0.953 | 0.613 | 0.616 |
 
 Model Performance
 
-# Performance on Q1 2020 data
+# Performance on March, 2020 data
 
 Compare mean squared error (MSE) of model-predicted death rates against
-observed death rates in Q1 2020. Because the COVID-19 pandemic only
+observed death rates in March, 2020. Because the COVID-19 pandemic only
 began partway through March, 2020, we can evaluate model performance by
-examining concordance of predicted and observed deaths in Q1 2020.
-Models 5, 8, 11, and 12 have the lowest MSE.
+examining concordance of predicted and observed deaths in March, 2020.
+Models 4, 6, and 7 have the lowest MSE, but differences between models
+are very small.
 
 | model |  mse |
 |------:|-----:|
-|     1 | 8318 |
-|     2 | 7855 |
-|     3 | 8040 |
-|     4 | 8205 |
-|     5 | 7817 |
-|     6 | 7841 |
-|     7 | 7991 |
-|     8 | 7823 |
-|     9 | 7967 |
-|    10 | 7977 |
-|    11 | 7818 |
-|    12 | 7820 |
+|     1 | 3251 |
+|     2 | 3251 |
+|     3 | 3251 |
+|     4 | 3251 |
+|     5 | 3251 |
+|     6 | 3251 |
+|     7 | 3251 |
+|     8 | 3251 |
+|     9 | 3251 |
 
 Mean Squared Error of Alternate Models
 
 # Outlier estimates
 
 To evaluate the extent of outlier model predictions, including
-unexpectedly large changes quarter-to-quarter, time series outliers were
+unexpectedly large changes month-to-month, time series outliers were
 identified using `tsoutliers()` from the
 {[forecast](https://cran.r-project.org/package=forecast)} R package.
 Using this method, only models 2 and 3 had no outliers. Potential
@@ -347,18 +315,15 @@ for outliers.
 
 | model | outlier_regions | outlier_total |
 |------:|----------------:|--------------:|
-|     1 |               1 |             1 |
-|     2 |               3 |            12 |
-|     3 |               0 |             0 |
-|     4 |               0 |             0 |
-|     5 |               3 |            12 |
-|     6 |               3 |            12 |
-|     7 |               4 |            18 |
-|     8 |               3 |            14 |
-|     9 |               4 |            17 |
-|    10 |               4 |            18 |
-|    11 |               3 |            14 |
-|    12 |               3 |            13 |
+|     1 |               5 |            70 |
+|     2 |               5 |            65 |
+|     3 |               5 |            63 |
+|     4 |              64 |          1340 |
+|     5 |               7 |            81 |
+|     6 |              81 |          1579 |
+|     7 |              80 |          1433 |
+|     8 |               7 |            82 |
+|     9 |               7 |            76 |
 
 Summary of Model Outliers
 
@@ -373,60 +338,49 @@ Summary of Model Outliers
 
     ## 
     ## [[3]]
-    ## NULL
-    ## 
-    ## [[4]]
-    ## NULL
-    ## 
-    ## [[5]]
 
 ![](README_files/plot%20volatility%20output-3.png)<!-- -->
 
     ## 
-    ## [[6]]
+    ## [[4]]
 
 ![](README_files/plot%20volatility%20output-4.png)<!-- -->
 
     ## 
-    ## [[7]]
+    ## [[5]]
 
 ![](README_files/plot%20volatility%20output-5.png)<!-- -->
 
     ## 
-    ## [[8]]
+    ## [[6]]
 
 ![](README_files/plot%20volatility%20output-6.png)<!-- -->
 
     ## 
-    ## [[9]]
+    ## [[7]]
 
 ![](README_files/plot%20volatility%20output-7.png)<!-- -->
 
     ## 
-    ## [[10]]
+    ## [[8]]
 
 ![](README_files/plot%20volatility%20output-8.png)<!-- -->
 
     ## 
-    ## [[11]]
+    ## [[9]]
 
 ![](README_files/plot%20volatility%20output-9.png)<!-- -->
 
-    ## 
-    ## [[12]]
-
-![](README_files/plot%20volatility%20output-10.png)<!-- -->
-
 # Final model
 
-Based on these results, model 8 was selected as the final model. In this
+Based on these results, model 5 was selected as the final model. In this
 model, **total deaths per day** was regressed on:
 
 -   county population (z-scored)
 
--   years since 2015
+-   years since 2011
 
--   quarter of the year (fixed grouping factor)
+-   month of the year (fixed grouping factor)
 
 -   county (random grouping factor nested within county set)
 
@@ -436,18 +390,26 @@ model, **total deaths per day** was regressed on:
 
 ## Model coefficients (fixed and random effects)
 
-| effect   | group           | term              | estimate | std.error | statistic |      df | p.value |
-|:---------|:----------------|:------------------|---------:|----------:|----------:|--------:|--------:|
-| fixed    | n/a             | (Intercept)       |    2.899 |     0.104 |      27.8 |    52.4 |       0 |
-| fixed    | n/a             | population_z      |    6.384 |     0.027 |     233.5 |  2532.8 |       0 |
-| fixed    | n/a             | year_zero         |    0.031 |     0.002 |      18.0 | 42146.9 |       0 |
-| fixed    | n/a             | quarter2          |   -0.354 |     0.007 |     -51.8 | 42023.7 |       0 |
-| fixed    | n/a             | quarter3          |   -0.466 |     0.007 |     -68.1 | 42023.2 |       0 |
-| fixed    | n/a             | quarter4          |   -0.229 |     0.007 |     -33.6 | 42027.9 |       0 |
-| ran_pars | region_code     | sd\_\_(Intercept) |    0.388 |       n/a |       n/a |     n/a |     n/a |
-| ran_pars | county_set_code | sd\_\_(Intercept) |    1.629 |       n/a |       n/a |     n/a |     n/a |
-| ran_pars | state           | sd\_\_(Intercept) |    0.627 |       n/a |       n/a |     n/a |     n/a |
-| ran_pars | Residual        | sd\_\_Observation |    0.508 |       n/a |       n/a |     n/a |     n/a |
+| effect   | group           | term              | estimate | std.error | statistic |       df | p.value |
+|:---------|:----------------|:------------------|---------:|----------:|----------:|---------:|--------:|
+| fixed    | n/a             | (Intercept)       |    2.410 |     0.137 |      17.6 |     57.2 |       0 |
+| fixed    | n/a             | population_z      |    7.617 |     0.027 |     284.2 |   5435.0 |       0 |
+| fixed    | n/a             | year_zero         |    0.031 |     0.000 |      67.4 | 264250.4 |       0 |
+| fixed    | n/a             | month2            |   -0.085 |     0.006 |     -15.3 | 259216.6 |       0 |
+| fixed    | n/a             | month3            |   -0.174 |     0.006 |     -30.6 | 259240.6 |       0 |
+| fixed    | n/a             | month4            |   -0.295 |     0.006 |     -51.4 | 259231.9 |       0 |
+| fixed    | n/a             | month5            |   -0.410 |     0.006 |     -71.4 | 259199.9 |       0 |
+| fixed    | n/a             | month6            |   -0.461 |     0.006 |     -79.9 | 259197.1 |       0 |
+| fixed    | n/a             | month7            |   -0.491 |     0.006 |     -85.2 | 259194.3 |       0 |
+| fixed    | n/a             | month8            |   -0.502 |     0.006 |     -87.2 | 259221.9 |       0 |
+| fixed    | n/a             | month9            |   -0.467 |     0.006 |     -81.0 | 259218.4 |       0 |
+| fixed    | n/a             | month10           |   -0.382 |     0.006 |     -66.6 | 259221.8 |       0 |
+| fixed    | n/a             | month11           |   -0.286 |     0.006 |     -49.9 | 259237.8 |       0 |
+| fixed    | n/a             | month12           |   -0.141 |     0.006 |     -24.7 | 259248.9 |       0 |
+| ran_pars | region_code     | sd\_\_(Intercept) |    0.421 |       n/a |       n/a |      n/a |     n/a |
+| ran_pars | county_set_code | sd\_\_(Intercept) |    2.629 |       n/a |       n/a |      n/a |     n/a |
+| ran_pars | state           | sd\_\_(Intercept) |    0.767 |       n/a |       n/a |      n/a |     n/a |
+| ran_pars | Residual        | sd\_\_Observation |    0.616 |       n/a |       n/a |      n/a |     n/a |
 
 ``` r
 sessionInfo()

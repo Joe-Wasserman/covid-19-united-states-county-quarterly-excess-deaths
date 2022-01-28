@@ -1,5 +1,5 @@
 ---
-title: "COVID-19 United States Excess Deaths by county and quarter: Model comparison and selection"
+title: "COVID-19 United States Excess Deaths by county and month: Model comparison and selection"
 output: github_document
 ---
 
@@ -29,7 +29,7 @@ knitr::opts_chunk$set(
 options(
   scipen = 999,
   digits = 3,
-  future.globals.maxSize = 1000000*1024,
+  future.globals.maxSize = 3000000*1024,
   knitr.kable.NA = "n/a"
 )
 
@@ -61,9 +61,9 @@ knitr::read_chunk(
 Several models with alternate specifications of random grouping factors were evaluated.
 To select a model, they were compared in terms of:
 
-1. Performance on 2015-2019 training data
+1. Performance on January, 2011 - February, 2020 training data
 
-2. Performance on Q1 2020 data
+2. Performance on March, 2020 data
 
 3. Outlier estimates in training data
 
@@ -88,13 +88,13 @@ icc %>%
 ```{r models, include=TRUE, echo=TRUE}
 ```
 
-# Performance on 2015-2019 training data
+# Performance on training data
 
 ```{r training-performance}
 ```
 
 Compare model performance indices for all five models.
-Although many models perform similarly for these metrics, when taken together and with a focus on AIC and BIC, model 8 (counties nested within county sets nested within states) and model 12 (counties nested within county sets nested within states nested within census regions) appear to be the top two contenders.
+Although many models perform similarly for these metrics, when taken together and with a focus on AIC and BIC, model 5 (counties nested within county sets nested within states) and model 9 (counties nested within county sets nested within states nested within census regions) appear to be the top two contenders.
 
 ```{r training performance output, include=TRUE, results='asis'}
 model_performance %>%
@@ -104,11 +104,11 @@ model_performance %>%
   )
 ```
 
-# Performance on Q1 2020 data
+# Performance on March, 2020 data
 
-Compare mean squared error (MSE) of model-predicted death rates against observed death rates in Q1 2020.
-Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in Q1 2020.
-Models 5, 8, 11, and 12 have the lowest MSE.
+Compare mean squared error (MSE) of model-predicted death rates against observed death rates in March, 2020.
+Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in March, 2020.
+Models 4, 6, and 7 have the lowest MSE, but differences between models are very small.
 
 ```{r validation-performance}
 ```
@@ -123,7 +123,7 @@ model_mse %>%
 
 # Outlier estimates
 
-To evaluate the extent of outlier model predictions, including unexpectedly large changes quarter-to-quarter, time series outliers were identified using `tsoutliers()` from the {[forecast](https://cran.r-project.org/package=forecast)} R package.
+To evaluate the extent of outlier model predictions, including unexpectedly large changes month-to-month, time series outliers were identified using `tsoutliers()` from the {[forecast](https://cran.r-project.org/package=forecast)} R package.
 Using this method, only models 2 and 3 had no outliers.
 Potential outliers identified for other states were concentrated in several Mountain West counties with zero non-censored values 2015-2019, and therefore mostly predicted values of zero.
 In the following plots for each model and county with outliers, grey lines are predicted values and blue dots represent values that `tsoutliers()` suggests as replacements for outliers.
@@ -149,14 +149,14 @@ print(fitted_outlier_plots)
 
 # Final model
 
-Based on these results, model 8 was selected as the final model.
+Based on these results, model 5 was selected as the final model.
 In this model, **total deaths per day** was regressed on:
   
   * county population (z-scored)
   
-  * years since 2015
+  * years since 2011
   
-  * quarter of the year (fixed grouping factor)
+  * month of the year (fixed grouping factor)
   
   * county (random grouping factor nested within county set)
   
@@ -170,7 +170,7 @@ In this model, **total deaths per day** was regressed on:
 ## Model coefficients (fixed and random effects)
 
 ```{r final-model output, include=TRUE, results='asis'}
-united_states_county_quarterly_results[[1]] %>% 
+united_states_county_monthly_results[[1]] %>% 
   broom.mixed::tidy() %>% 
     kable(
     format = "pipe"
