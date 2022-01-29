@@ -51,23 +51,23 @@ united_states_county_monthly_excess_deaths_estimates <- data.table::fread(
 )
 
 total_excess_deaths_2020 <- united_states_county_monthly_excess_deaths_estimates %>%
-  filter(year == 2020L) %>%
+  filter(year == 2020L, start_date >= "2020-03-01") %>%
   pull(excess_deaths) %>%
   sum(na.rm = TRUE)
 
 total_excess_deaths_2021 <- united_states_county_monthly_excess_deaths_estimates %>%
-  filter(year == 2021L, month <= "9") %>%
+  filter(year == 2021L, start_date < "2021-12-01") %>%
   pull(excess_deaths) %>%
   sum(na.rm = TRUE)
 ```
 
 This repository contains code and data to estimate **expected deaths** and **excess deaths** in the United States in 2020 and 2021 by **county** and **month**.
-This model estimates that there were about `r round(total_excess_deaths_2020)` excess deaths in the United States in 2020 and `r round(total_excess_deaths_2021)` in the first nine months of 2021, for a total of `r round(sum(total_excess_deaths_2020, total_excess_deaths_2021))`.
+This model estimates that there were about `r round(total_excess_deaths_2020)` excess deaths in the United States in 2020 (excluding January and February) and `r round(total_excess_deaths_2021)` in 2021 (excluding December), for a total of `r round(sum(total_excess_deaths_2020, total_excess_deaths_2021))`.
 
 Estimated excess deaths are available at [`/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv).
 
 
-#### Nationwide United States Mortality, 2011 through September, 2021
+#### Nationwide United States Mortality, 2011 through 2021 (provisional and partial)
 ```{r results summary, message=FALSE, warning=FALSE}
 
 deaths_nationwide_summary <- united_states_county_monthly_excess_deaths_estimates %>% 
@@ -76,7 +76,14 @@ deaths_nationwide_summary <- united_states_county_monthly_excess_deaths_estimate
     across(c(total_deaths, expected_deaths, excess_deaths), sum, na.rm = TRUE),
     .groups = "drop"
   ) %>% 
-  mutate(period = date(start_date))
+  mutate(period = date(start_date)) %>% 
+  # exclude the prior month from plot due to partial data
+  filter(
+    period < floor_date(
+      Sys.Date() - months(1), 
+      unit = "month"
+    )
+  )
 
 g <- ggplot(deaths_nationwide_summary, aes(x = period))
 
@@ -96,22 +103,22 @@ p <- g +
     xintercept = date("2020-03-01"),
     linetype = "dashed"
   ) +
-  # annotate(
-  #   geom = "curve", 
-  #   x = date("2018-10-01"), 
-  #   y = 880000, 
-  #   xend = date("2020-03-20"), 
-  #   yend = 850000, 
-  #   curvature = -.2, 
-  #   arrow = arrow(length = unit(3, "mm"))
-  # ) +
-  # annotate(
-  #   geom = "text", 
-  #   x = date("2018-09-20"), 
-  #   y = 880000, 
-  #   label = "April 2020 - June 2020, the beginning of the\nCOVID-19 pandemic in the United States", 
-  #   hjust = "right"
-  # ) +
+  annotate(
+    geom = "curve",
+    x = date("2018-10-01"),
+    y = 310000,
+    xend = date("2020-02-20"),
+    yend = 310000,
+    curvature = -.2,
+    arrow = arrow(length = unit(3, "mm"))
+  ) +
+  annotate(
+    geom = "text",
+    x = date("2018-09-20"),
+    y = 310000,
+    label = "March 2020, the beginning of the\nCOVID-19 pandemic in the United States",
+    hjust = "right"
+  ) +
   # annotate(
   #   geom = "curve", 
   #   x = date("2019-12-01"), 

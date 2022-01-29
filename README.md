@@ -8,13 +8,14 @@ COVID-19 United States Excess Deaths by county and month
 This repository contains code and data to estimate **expected deaths**
 and **excess deaths** in the United States in 2020 and 2021 by
 **county** and **month**. This model estimates that there were about
-457779 excess deaths in the United States in 2020 and 304412 in the
-first nine months of 2021, for a total of 762191.
+467602 excess deaths in the United States in 2020 (excluding January and
+February) and 417400 in 2021 (excluding December), for a total of
+885002.
 
 Estimated excess deaths are available at
 [`/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv).
 
-#### Nationwide United States Mortality, 2011 through September, 2021
+#### Nationwide United States Mortality, 2011 through 2021 (provisional and partial)
 
 ![](README_files/results%20summary-1.png)<!-- -->
 
