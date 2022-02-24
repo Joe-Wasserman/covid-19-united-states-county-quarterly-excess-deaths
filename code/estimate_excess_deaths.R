@@ -1,8 +1,14 @@
-# define function to estimate excess deaths
+# define functions to
+# 1. train a model to estimate expected deaths
+# 2. estimate excess deaths from model predictions
 # adapted from The Economist's excess deaths model
 # see https://github.com/TheEconomist/covid-19-excess-deaths-tracker
 
-estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_deaths_model = NULL, period = "quarter", train_model = TRUE) {
+train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, period = "month", training_end_date = "2020-01-01", model_type = "lmer") {
+  if (is.null(expected_deaths_formula)) {
+    stop("Must supply a model formula")
+  }
+
   year_min <- min(df$year, na.rm = TRUE)
 
   df_model <- df %>%
@@ -10,51 +16,78 @@ estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_
       year_zero = year - year_min
     )
 
-  if (train_model == FALSE) {
-    if (is.null(expected_deaths_model)) {
-      stop(glue::glue("When train_model = FALSE, expected_deaths_model must be a model object to use to estimate expected deaths."))
-    }
-
-    # Use previously trained model
-    expected_deaths <- df_model %>%
-      filter(year >= 2020) %>%
-      mutate(
-        expected_deaths = days * predict(
-          expected_deaths_model,
-          .,
-          allow.new.levels = TRUE
-        )
-      )
-  } else if (period %in% c("month", "quarter")) {
+  if (period %in% c("month", "quarter")) {
 
     # Train a monthly or quarterly model
     train_df <- df_model %>%
-      filter(end_date < ymd("2020-03-01"))
+      filter(end_date < ymd(training_end_date))
 
-    # estimate linear mixed effects regression (LMER)
-    # NOTE: if this model fails, use allFit to compare values from multiple
-    # optimizers
-    expected_deaths_model <- lmerTest::lmer(
-      expected_deaths_formula,
-      train_df,
-      REML = FALSE,
-      control = strictControl
-    )
-
-    # predict expected deaths for all observations, including historical
-    expected_deaths <- df_model %>%
-      mutate(
-        expected_deaths = predict(
-          expected_deaths_model,
-          newdata = .,
-          type = "response",
-          allow.new.levels = TRUE
-        ) * days
+    if (model_type == "lmer") {
+      # estimate linear mixed effects regression (LMER)
+      # NOTE: if this model fails, use allFit to compare values from multiple
+      # optimizers
+      expected_deaths_model <- lmerTest::lmer(
+        expected_deaths_formula,
+        train_df,
+        REML = FALSE,
+        control = strictControl
       )
 
-    # return fitted values from training data for model evaluation and diagnostics
-    df_fit <- broom.mixed::augment(expected_deaths_model)
+      # return fitted values from training data for model evaluation and diagnostics
+      df_fit <- broom.mixed::augment(expected_deaths_model)
+    }
+    if (model_type == "spaMM") {
+
+      # estimate linear mixed effects regression with temporal autocorrelation
+      # note: ML is the default estimator in spaMM
+      expected_deaths_model <- spaMM::fitme(
+        expected_deaths_formula,
+        train_df
+      )
+
+      # TODO create function to tidy output with https://easystats.github.io/insight/
+      df_fit <- NULL
+    }
+    if (model_type == "glmmTMB") {
+
+      # estimate linear mixed effects regression with temporal autocorrelation
+      # note: ML is the default estimator in glmmTMB
+      expected_deaths_model <- glmmTMB::glmmTMB(
+        expected_deaths_formula,
+        train_df,
+        dispformula = ~ 1 + population_z
+      )
+
+      # return fitted values from training data for model evaluation and diagnostics
+      df_fit <- broom.mixed::augment(expected_deaths_model)
+    }
   }
+  list(expected_deaths_model, df_fit)
+}
+
+estimate_excess_deaths <- function(df, expected_deaths_model = NULL, period = "month") {
+  if (is.null(expected_deaths_model)) {
+    stop(glue::glue("expected_deaths_model must be a model object to use to estimate expected deaths."))
+  }
+
+  year_min <- min(df$year, na.rm = TRUE)
+
+  df_model <- df %>%
+    mutate(
+      year_zero = year - year_min
+    )
+
+  # predict expected deaths for all observations, including historical
+  # using previously trained model
+  expected_deaths <- df_model %>%
+    mutate(
+      expected_deaths = predict(
+        expected_deaths_model,
+        newdata = .,
+        type = "response",
+        allow.new.levels = TRUE
+      ) * days
+    )
 
   # Calculate excess deaths
   # Replace negative expected deaths (impossible) with 0
@@ -95,5 +128,5 @@ estimate_excess_deaths <- function(df, expected_deaths_formula = NULL, expected_
       )
   }
 
-  list(expected_deaths_model, excess_deaths, df_fit)
+  excess_deaths
 }

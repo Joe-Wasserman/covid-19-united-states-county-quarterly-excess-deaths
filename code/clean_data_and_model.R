@@ -540,11 +540,10 @@ lmm_formulas <- list(
 model_out <- lmm_formulas %>%
   furrr::future_map(
     .,
-    ~ estimate_excess_deaths(
+    ~ train_expected_deaths_model(
       df = united_states_county_monthly_deaths,
       expected_deaths_formula = .x,
-      period = "month",
-      train_model = TRUE
+      period = "month"
     )
   )
 
@@ -557,18 +556,22 @@ model_performance <- model_out %>%
   ) %>%
   performance::compare_performance()
 
-## ---- validation-performance ----
-# compare model mean squared error on 2020 Q1 validation set
-expected_deaths <- model_out %>%
-  map(
+expected_and_excess_deaths <- model_out %>%
+  furrr::future_map(
     .,
-    ~ .x[[2]]
+    ~ estimate_excess_deaths(
+      df = united_states_county_monthly_deaths,
+      expected_deaths_model = .x[[1]],
+      period = "month"
+    )
   )
 
-model_mse <- expected_deaths %>%
+## ---- validation-performance ----
+# compare model mean squared error on 2020 Q1 validation set
+model_mse <- expected_and_excess_deaths %>%
   imap_dfr(
     ~ .x %>%
-      filter(year == 2020L, month == "3") %>%
+      filter(year == 2020L, month %in% c("1", "2", "3")) %>%
       summarise(
         model = .y,
         mse = mean(
@@ -582,7 +585,7 @@ model_mse <- expected_deaths %>%
 # evaluate prediction volatility by identifying outliers in time series
 
 # identify outliers in fitted timeseries of data with forecast::tsoutliers
-model_volatility <- expected_deaths %>%
+model_volatility <- expected_and_excess_deaths %>%
   furrr::future_map(
     ~ .x %>%
       select(region_code, expected_deaths) %>%
@@ -657,36 +660,36 @@ fitted_outlier_plots <- data_fitted_outliers_only %>%
 
 ## ---- final-model ----
 
-united_states_county_monthly_results <- model_out[[5]]
+final_model <- 5
 
-# export the final selected model
+united_states_county_monthly_model <- model_out[[final_model]]
+united_states_county_monthly_results <- expected_and_excess_deaths[[final_model]]
 
+# export the final selected model object
 model_out_path <- file.path(here::here(), "results/united_states_county_monthly_model.RDS")
 
 if (file.exists(model_out_path)) file.remove(model_out_path)
 
-# export model object
-saveRDS(united_states_county_monthly_results[[1]], model_out_path)
+saveRDS(united_states_county_monthly_model[[1]], model_out_path)
 
-# export predicted values
-
+# export expected deaths and estimated excess deaths
 results_out_path <- file.path(here::here(), "results/united_states_county_monthly_excess_deaths_estimates.csv")
 
 if (file.exists(results_out_path)) file.remove(results_out_path)
 
 data.table::fwrite(
-  united_states_county_monthly_results[[2]],
+  united_states_county_monthly_results,
   results_out_path,
   append = FALSE
 )
 
-# export model-fitted values from training data
+# export model-fitted values from trained model
 fitted_out_path <- file.path(here::here(), "results/united_states_county_monthly_fitted_deaths_per_day_estimates.csv")
 
 if (file.exists(fitted_out_path)) file.remove(fitted_out_path)
 
 data.table::fwrite(
-  united_states_county_monthly_results[[3]],
+  united_states_county_monthly_model[[2]],
   fitted_out_path,
   append = FALSE
 )
