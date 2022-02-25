@@ -246,18 +246,18 @@ Note that these estimates are only y-hat directly from the initial model, **not*
 
 For more details on model selection and performance, see [`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/README.md).
 
-Because the COVID-19 pandemic only began in the United States partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in the counties that were unaffected by COVID-19 in March, 2020.
+Because the COVID-19 pandemic only began in the United States partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in the beginning of 2020.
 
 ```{r performance}
 predict_check <- united_states_county_monthly_excess_deaths_estimates %>%
-  filter(start_date == "2020-01-01")
+  filter(start_date >= "2020-01-01" & start_date < "2020-04-01") %>% 
+  rename(period = start_date)
 
 result_corr <- cor.test(x = predict_check$total_deaths, y = predict_check$expected_deaths)
 ```
 
-Observed and expected deaths in March, 2020 are highly correlated, r = `r result_corr$estimate`.
+Observed and expected deaths in January through March, 2020 are highly correlated, r = `r result_corr$estimate`.
 As can be seen from the following scatterplot, total deaths (y-axis) tended to exceed expected deaths (x-axis).
-Unsurprisingly, some of the counties that were hardest hit early in the pandemic are among those with total deaths that most diverge from expected deaths.
 
 ```{r plot_comparison, message=FALSE, warning=FALSE}
 g <- ggplot(
@@ -288,6 +288,7 @@ p <- g +
     size = 0.3,
     color = "grey25"
   ) +
+  facet_wrap(vars(period)) +
   ggrepel::geom_label_repel(
     data = filter(
       predict_check,

@@ -8,9 +8,9 @@ COVID-19 United States Excess Deaths by county and month
 This repository contains code and data to estimate **expected deaths**
 and **excess deaths** in the United States in 2020 and 2021 by
 **county** and **month**. This model estimates that there were about
-467602 excess deaths in the United States in 2020 (excluding January and
-February) and 417400 in 2021 (excluding December), for a total of
-885002.
+463489 excess deaths in the United States in 2020 (excluding January and
+February) and 410778 in 2021 (excluding December), for a total of
+874266.
 
 Estimated excess deaths are available at
 [`/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv).
@@ -118,14 +118,11 @@ For more details on model selection and performance, see
 
 Because the COVID-19 pandemic only began in the United States partway
 through March, 2020, we can evaluate model performance by examining
-concordance of predicted and observed deaths in the counties that were
-unaffected by COVID-19 in March, 2020.
+concordance of predicted and observed deaths in the beginning of 2020.
 
-Observed and expected deaths in March, 2020 are highly correlated, r =
-0.998. As can be seen from the following scatterplot, total deaths
-(y-axis) tended to exceed expected deaths (x-axis). Unsurprisingly, some
-of the counties that were hardest hit early in the pandemic are among
-those with total deaths that most diverge from expected deaths.
+Observed and expected deaths in January through March, 2020 are highly
+correlated, r = 0.994. As can be seen from the following scatterplot,
+total deaths (y-axis) tended to exceed expected deaths (x-axis).
 
 ![](README_files/plot_comparison-1.png)<!-- -->
 

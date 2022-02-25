@@ -244,11 +244,11 @@ lmm_formulas <- list(
 model_out <- lmm_formulas %>%
   furrr::future_map(
     .,
-    ~ estimate_excess_deaths(
+    ~ train_expected_deaths_model(
       df = united_states_county_monthly_deaths,
       expected_deaths_formula = .x,
       period = "month",
-      train_model = TRUE
+      training_end_date = "2020-01-01"
     )
   )
 ```
@@ -264,38 +264,38 @@ two contenders.
 
 | Name    | Model           |    AIC | AIC_wt |    BIC | BIC_wt | R2_conditional | R2_marginal |   ICC |  RMSE | Sigma |
 |:--------|:----------------|-------:|-------:|-------:|-------:|---------------:|------------:|------:|------:|------:|
-| Model 1 | lmerModLmerTest | 510963 |  0.000 | 511142 |  0.000 |          0.995 |       0.899 | 0.954 | 0.613 | 0.616 |
-| Model 2 | lmerModLmerTest | 510917 |  0.000 | 511106 |  0.000 |          0.995 |       0.898 | 0.955 | 0.613 | 0.616 |
-| Model 3 | lmerModLmerTest | 510931 |  0.000 | 511119 |  0.000 |          0.995 |       0.897 | 0.955 | 0.613 | 0.616 |
-| Model 4 | lmerModLmerTest | 513598 |  0.000 | 513777 |  0.000 |          0.995 |       0.948 | 0.900 | 0.613 | 0.617 |
-| Model 5 | lmerModLmerTest | 510877 |  0.299 | 511065 |  0.988 |          0.995 |       0.901 | 0.953 | 0.613 | 0.616 |
-| Model 6 | lmerModLmerTest | 513599 |  0.000 | 513787 |  0.000 |          0.995 |       0.948 | 0.900 | 0.613 | 0.617 |
-| Model 7 | lmerModLmerTest | 513597 |  0.000 | 513786 |  0.000 |          0.995 |       0.948 | 0.900 | 0.613 | 0.617 |
-| Model 8 | lmerModLmerTest | 510878 |  0.189 | 511077 |  0.003 |          0.995 |       0.901 | 0.953 | 0.613 | 0.616 |
-| Model 9 | lmerModLmerTest | 510876 |  0.511 | 511075 |  0.009 |          0.995 |       0.901 | 0.953 | 0.613 | 0.616 |
+| Model 1 | lmerModLmerTest | 492639 |  0.000 | 492817 |  0.000 |          0.995 |       0.904 | 0.952 | 0.602 | 0.605 |
+| Model 2 | lmerModLmerTest | 492593 |  0.000 | 492781 |  0.000 |          0.995 |       0.902 | 0.952 | 0.602 | 0.605 |
+| Model 3 | lmerModLmerTest | 492606 |  0.000 | 492794 |  0.000 |          0.995 |       0.902 | 0.952 | 0.602 | 0.605 |
+| Model 4 | lmerModLmerTest | 495227 |  0.000 | 495405 |  0.000 |          0.995 |       0.950 | 0.893 | 0.603 | 0.606 |
+| Model 5 | lmerModLmerTest | 492550 |  0.299 | 492738 |  0.988 |          0.995 |       0.906 | 0.950 | 0.602 | 0.605 |
+| Model 6 | lmerModLmerTest | 495227 |  0.000 | 495415 |  0.000 |          0.995 |       0.950 | 0.894 | 0.603 | 0.606 |
+| Model 7 | lmerModLmerTest | 495225 |  0.000 | 495413 |  0.000 |          0.995 |       0.950 | 0.894 | 0.603 | 0.606 |
+| Model 8 | lmerModLmerTest | 492551 |  0.188 | 492750 |  0.003 |          0.995 |       0.906 | 0.950 | 0.602 | 0.605 |
+| Model 9 | lmerModLmerTest | 492549 |  0.513 | 492748 |  0.009 |          0.995 |       0.905 | 0.950 | 0.602 | 0.605 |
 
 Model Performance
 
 # Performance on March, 2020 data
 
 Compare mean squared error (MSE) of model-predicted death rates against
-observed death rates in March, 2020. Because the COVID-19 pandemic only
-began partway through March, 2020, we can evaluate model performance by
-examining concordance of predicted and observed deaths in March, 2020.
-Models 4, 6, and 7 have the lowest MSE, but differences between models
-are very small.
+observed death rates in January through March, 2020. Because the
+COVID-19 pandemic only began partway through March, 2020, we can
+evaluate model performance by examining concordance of predicted and
+observed deaths in January through March, 2020. Models have comparable
+MSE by this measure.
 
 | model |  mse |
 |------:|-----:|
-|     1 | 3251 |
-|     2 | 3251 |
-|     3 | 3251 |
-|     4 | 3251 |
-|     5 | 3251 |
-|     6 | 3251 |
-|     7 | 3251 |
-|     8 | 3251 |
-|     9 | 3251 |
+|     1 | 1754 |
+|     2 | 1754 |
+|     3 | 1754 |
+|     4 | 1757 |
+|     5 | 1754 |
+|     6 | 1757 |
+|     7 | 1757 |
+|     8 | 1754 |
+|     9 | 1754 |
 
 Mean Squared Error of Alternate Models
 
@@ -315,15 +315,15 @@ for outliers.
 
 | model | outlier_regions | outlier_total |
 |------:|----------------:|--------------:|
-|     1 |               5 |            70 |
-|     2 |               5 |            65 |
-|     3 |               5 |            63 |
-|     4 |              64 |          1340 |
-|     5 |               7 |            81 |
-|     6 |              81 |          1579 |
-|     7 |              80 |          1433 |
-|     8 |               7 |            82 |
-|     9 |               7 |            76 |
+|     1 |              35 |           171 |
+|     2 |              35 |           174 |
+|     3 |              35 |           172 |
+|     4 |              98 |          1509 |
+|     5 |              35 |           179 |
+|     6 |             113 |          1669 |
+|     7 |             112 |          1743 |
+|     8 |              35 |           178 |
+|     9 |              35 |           180 |
 
 Summary of Model Outliers
 
@@ -392,24 +392,24 @@ model, **total deaths per day** was regressed on:
 
 | effect   | group           | term              | estimate | std.error | statistic |       df | p.value |
 |:---------|:----------------|:------------------|---------:|----------:|----------:|---------:|--------:|
-| fixed    | n/a             | (Intercept)       |    2.410 |     0.137 |      17.6 |     57.2 |       0 |
-| fixed    | n/a             | population_z      |    7.617 |     0.027 |     284.2 |   5435.0 |       0 |
-| fixed    | n/a             | year_zero         |    0.031 |     0.000 |      67.4 | 264250.4 |       0 |
-| fixed    | n/a             | month2            |   -0.085 |     0.006 |     -15.3 | 259216.6 |       0 |
-| fixed    | n/a             | month3            |   -0.174 |     0.006 |     -30.6 | 259240.6 |       0 |
-| fixed    | n/a             | month4            |   -0.295 |     0.006 |     -51.4 | 259231.9 |       0 |
-| fixed    | n/a             | month5            |   -0.410 |     0.006 |     -71.4 | 259199.9 |       0 |
-| fixed    | n/a             | month6            |   -0.461 |     0.006 |     -79.9 | 259197.1 |       0 |
-| fixed    | n/a             | month7            |   -0.491 |     0.006 |     -85.2 | 259194.3 |       0 |
-| fixed    | n/a             | month8            |   -0.502 |     0.006 |     -87.2 | 259221.9 |       0 |
-| fixed    | n/a             | month9            |   -0.467 |     0.006 |     -81.0 | 259218.4 |       0 |
-| fixed    | n/a             | month10           |   -0.382 |     0.006 |     -66.6 | 259221.8 |       0 |
-| fixed    | n/a             | month11           |   -0.286 |     0.006 |     -49.9 | 259237.8 |       0 |
-| fixed    | n/a             | month12           |   -0.141 |     0.006 |     -24.7 | 259248.9 |       0 |
-| ran_pars | region_code     | sd\_\_(Intercept) |    0.421 |       n/a |       n/a |      n/a |     n/a |
-| ran_pars | county_set_code | sd\_\_(Intercept) |    2.629 |       n/a |       n/a |      n/a |     n/a |
-| ran_pars | state           | sd\_\_(Intercept) |    0.767 |       n/a |       n/a |      n/a |     n/a |
-| ran_pars | Residual        | sd\_\_Observation |    0.616 |       n/a |       n/a |      n/a |     n/a |
+| fixed    | n/a             | (Intercept)       |    2.448 |     0.131 |      18.6 |     57.5 |       0 |
+| fixed    | n/a             | population_z      |    7.486 |     0.026 |     284.0 |   5122.5 |       0 |
+| fixed    | n/a             | year_zero         |    0.032 |     0.000 |      69.2 | 259352.4 |       0 |
+| fixed    | n/a             | month2            |   -0.092 |     0.006 |     -15.9 | 254478.7 |       0 |
+| fixed    | n/a             | month3            |   -0.185 |     0.006 |     -32.2 | 254513.5 |       0 |
+| fixed    | n/a             | month4            |   -0.306 |     0.006 |     -52.8 | 254503.0 |       0 |
+| fixed    | n/a             | month5            |   -0.421 |     0.006 |     -72.7 | 254468.3 |       0 |
+| fixed    | n/a             | month6            |   -0.471 |     0.006 |     -81.1 | 254466.5 |       0 |
+| fixed    | n/a             | month7            |   -0.501 |     0.006 |     -86.4 | 254469.3 |       0 |
+| fixed    | n/a             | month8            |   -0.512 |     0.006 |     -88.3 | 254491.4 |       0 |
+| fixed    | n/a             | month9            |   -0.477 |     0.006 |     -82.2 | 254486.5 |       0 |
+| fixed    | n/a             | month10           |   -0.392 |     0.006 |     -67.9 | 254497.9 |       0 |
+| fixed    | n/a             | month11           |   -0.297 |     0.006 |     -51.3 | 254505.3 |       0 |
+| fixed    | n/a             | month12           |   -0.151 |     0.006 |     -26.3 | 254519.7 |       0 |
+| ran_pars | region_code     | sd\_\_(Intercept) |    0.406 |       n/a |       n/a |      n/a |     n/a |
+| ran_pars | county_set_code | sd\_\_(Intercept) |    2.508 |       n/a |       n/a |      n/a |     n/a |
+| ran_pars | state           | sd\_\_(Intercept) |    0.736 |       n/a |       n/a |      n/a |     n/a |
+| ran_pars | Residual        | sd\_\_Observation |    0.605 |       n/a |       n/a |      n/a |     n/a |
 
 ``` r
 sessionInfo()

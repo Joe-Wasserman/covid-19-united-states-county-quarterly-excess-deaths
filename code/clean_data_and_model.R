@@ -543,7 +543,8 @@ model_out <- lmm_formulas %>%
     ~ train_expected_deaths_model(
       df = united_states_county_monthly_deaths,
       expected_deaths_formula = .x,
-      period = "month"
+      period = "month",
+      training_end_date = "2020-01-01"
     )
   )
 

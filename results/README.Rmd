@@ -106,9 +106,9 @@ model_performance %>%
 
 # Performance on March, 2020 data
 
-Compare mean squared error (MSE) of model-predicted death rates against observed death rates in March, 2020.
-Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in March, 2020.
-Models 4, 6, and 7 have the lowest MSE, but differences between models are very small.
+Compare mean squared error (MSE) of model-predicted death rates against observed death rates in January through March, 2020.
+Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in January through March, 2020.
+Models have comparable MSE by this measure.
 
 ```{r validation-performance}
 ```
@@ -170,7 +170,7 @@ In this model, **total deaths per day** was regressed on:
 ## Model coefficients (fixed and random effects)
 
 ```{r final-model output, include=TRUE, results='asis'}
-united_states_county_monthly_results[[1]] %>% 
+united_states_county_monthly_model[[1]] %>% 
   broom.mixed::tidy() %>% 
     kable(
     format = "pipe"
