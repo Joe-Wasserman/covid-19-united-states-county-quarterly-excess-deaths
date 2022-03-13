@@ -4,10 +4,21 @@
 # adapted from The Economist's excess deaths model
 # see https://github.com/TheEconomist/covid-19-excess-deaths-tracker
 
-train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, period = "month", training_end_date = "2020-01-01", model_type = "lmer") {
+train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, period = "month", training_end_date = "2020-01-01", model_type = "lmer", family = "gaussian") {
   if (is.null(expected_deaths_formula)) {
     stop("Must supply a model formula")
   }
+
+  # if(dispformula != ~1 & model_type != "glmmTMB") {
+  #   warning(glue::glue(
+  #     "a non-default dispformula {dispformula} was specified for model_type {model_type}, but the dispformula argument is only used when model_type = glmmTMB.
+  #     The dispformula argument will be ignored."
+  #     ))
+  # }
+
+  message(glue::glue(
+    "Fitting model_type {model_type} with data prior to {training_end_date}"
+    ))
 
   year_min <- min(df$year, na.rm = TRUE)
 
@@ -30,7 +41,8 @@ train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, peri
         expected_deaths_formula,
         train_df,
         REML = FALSE,
-        control = strictControl
+        control = strictControl,
+        ...
       )
 
       # return fitted values from training data for model evaluation and diagnostics
@@ -42,7 +54,8 @@ train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, peri
       # note: ML is the default estimator in spaMM
       expected_deaths_model <- spaMM::fitme(
         expected_deaths_formula,
-        train_df
+        train_df,
+        ...
       )
 
       # TODO create function to tidy output with https://easystats.github.io/insight/
@@ -55,11 +68,20 @@ train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, peri
       expected_deaths_model <- glmmTMB::glmmTMB(
         expected_deaths_formula,
         train_df,
-        dispformula = ~ 1 + population_z
+        family
       )
 
+      print(expected_deaths_model)
+
       # return fitted values from training data for model evaluation and diagnostics
-      df_fit <- broom.mixed::augment(expected_deaths_model)
+      df_fit <- augment.glmmTMB2(expected_deaths_model, type = "response")
+    }
+    if(model_type == "sdmTMB") {
+      expected_deaths_model <- sdmTMB::sdmTMB(
+        expected_deaths_formula,
+        train_df,
+        ...
+      )
     }
   }
   list(expected_deaths_model, df_fit)
@@ -86,7 +108,12 @@ estimate_excess_deaths <- function(df, expected_deaths_model = NULL, period = "m
         newdata = .,
         type = "response",
         allow.new.levels = TRUE
-      ) * days
+      ),
+      expected_deaths = expected_deaths *
+        case_when(
+          expected_deaths_model$modelInfo$family$family == "gaussian" ~ days,
+          TRUE ~ 1
+        )
     )
 
   # Calculate excess deaths

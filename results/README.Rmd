@@ -36,6 +36,7 @@ options(
 set.seed(20201007)
 
 source(
+  file.path(here::here(), "code/augment_glmmTMB2.R"),
   file.path(here::here(), "code/estimate_excess_deaths.R")
 )
 
