@@ -35,9 +35,12 @@ options(
 
 set.seed(20201007)
 
-source(
-  file.path(here::here(), "code/augment_glmmTMB2.R"),
-  file.path(here::here(), "code/estimate_excess_deaths.R")
+walk(
+  c(
+    file.path(here::here(), "code", "augment_glmmTMB2.R"),
+    file.path(here::here(), "code", "estimate_excess_deaths.R")
+  ),
+  source
 )
 
 ```
@@ -94,8 +97,9 @@ icc %>%
 ```{r training-performance}
 ```
 
-Compare model performance indices for all five models.
-Although many models perform similarly for these metrics, when taken together and with a focus on AIC and BIC, model 5 (counties nested within county sets nested within states) and model 9 (counties nested within county sets nested within states nested within census regions) appear to be the top two contenders.
+Compare model performance indices for all models.
+Although many models perform similarly for these metrics, when taken together and with a focus on AIC and BIC, model 5 (counties nested within county sets nested within states) and model 9 (counties nested within county sets nested within states nested within census regions) appear to be the top two contenders among LMMs.
+These two models were also estimated with an AR1 autoregressive term via glmmTMB.
 
 ```{r training performance output, include=TRUE, results='asis'}
 model_performance %>%
@@ -105,11 +109,11 @@ model_performance %>%
   )
 ```
 
-# Performance on March, 2020 data
+# Performance on January and February, 2020 data
 
-Compare mean squared error (MSE) of model-predicted death rates against observed death rates in January through March, 2020.
-Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in January through March, 2020.
-Models have comparable MSE by this measure.
+Compare mean squared error (MSE) of model-predicted death rates against observed death rates in January and February, 2020.
+Because the COVID-19 pandemic only began partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in these two months.
+The two autoregressive models outperform the non-autoregressive LMMs by this measure.
 
 ```{r validation-performance}
 ```
@@ -150,7 +154,7 @@ print(fitted_outlier_plots)
 
 # Final model
 
-Based on these results, model 5 was selected as the final model.
+Based on these results, model 10 (model 5 with an additional AR1 autoregressive term) was selected as the final model.
 In this model, **total deaths per day** was regressed on:
   
   * county population (z-scored)
@@ -158,6 +162,8 @@ In this model, **total deaths per day** was regressed on:
   * years since 2011
   
   * month of the year (fixed grouping factor)
+  
+  * monthly auto-regressive term, allowed to vary by county
   
   * county (random grouping factor nested within county set)
   
@@ -168,7 +174,7 @@ In this model, **total deaths per day** was regressed on:
 ```{r final-model}
 ```
 
-## Model coefficients (fixed and random effects)
+## Model coefficients (fixed, random, and auto-regressive effects)
 
 ```{r final-model output, include=TRUE, results='asis'}
 united_states_county_monthly_model[[1]] %>% 

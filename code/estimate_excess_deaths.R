@@ -4,7 +4,7 @@
 # adapted from The Economist's excess deaths model
 # see https://github.com/TheEconomist/covid-19-excess-deaths-tracker
 
-train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, period = "month", training_end_date = "2020-01-01", model_type = "lmer", family = "gaussian") {
+train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, period = "month", training_end_date = "2020-01-01", model_type = "lmer", family = "gaussian", ...) {
   if (is.null(expected_deaths_formula)) {
     stop("Must supply a model formula")
   }
@@ -18,7 +18,7 @@ train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, peri
 
   message(glue::glue(
     "Fitting model_type {model_type} with data prior to {training_end_date}"
-    ))
+  ))
 
   year_min <- min(df$year, na.rm = TRUE)
 
@@ -76,7 +76,7 @@ train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, peri
       # return fitted values from training data for model evaluation and diagnostics
       df_fit <- augment.glmmTMB2(expected_deaths_model, type = "response")
     }
-    if(model_type == "sdmTMB") {
+    if (model_type == "sdmTMB") {
       expected_deaths_model <- sdmTMB::sdmTMB(
         expected_deaths_formula,
         train_df,
@@ -99,8 +99,20 @@ estimate_excess_deaths <- function(df, expected_deaths_model = NULL, period = "m
       year_zero = year - year_min
     )
 
+  # TODO: build this out for the rest of the model types in train_expected_deaths_model()
+  if (class(expected_deaths_model) == "lmerModLmerTest") {
+    outcome_variable <- names(expected_deaths_model@frame)[[1]]
+  } else if (class(expected_deaths_model) == "glmmTMB") {
+    outcome_variable <- names(expected_deaths_model$modelInfo$respCol)
+  } else {
+    #placeholder - try both methods defined above
+    try(outcome_variable <- names(expected_deaths_model@frame)[[1]])
+    try(outcome_variable <- names(expected_deaths_model$modelInfo$respCol))
+  }
+
   # predict expected deaths for all observations, including historical
   # using previously trained model
+  # transform deaths/day by multiplying for days in period if necessary
   expected_deaths <- df_model %>%
     mutate(
       expected_deaths = predict(
@@ -111,8 +123,8 @@ estimate_excess_deaths <- function(df, expected_deaths_model = NULL, period = "m
       ),
       expected_deaths = expected_deaths *
         case_when(
-          expected_deaths_model$modelInfo$family$family == "gaussian" ~ days,
-          TRUE ~ 1
+          outcome_variable == "total_deaths_per_day" ~ days,
+          outcome_variable == "total_deaths" ~ 1L
         )
     )
 

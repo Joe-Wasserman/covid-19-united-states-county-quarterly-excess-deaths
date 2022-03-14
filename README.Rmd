@@ -198,6 +198,7 @@ Excess mortality for the months in which total deaths exceeded expected deaths a
   
   Given the large number of counties in the United States (over 3000), a linear mixed model with county, county set, and census division as random grouping factors was used to make estimation tractable.
   These random grouping factors enable each county, county set, and state to have their own intercepts in the final model.
+  Furthermore, because mortality rates are correlated over time, an auto-regressive term was included in the model to allow mortality rates to correlate month-to-month within each county.
   
   More precisely, **total deaths per day** was regressed on:
   
@@ -213,28 +214,28 @@ Excess mortality for the months in which total deaths exceeded expected deaths a
   
   * state (random grouping factor)
   
-  This model can be expressed by the equation:
+  This model can be expressed by the equation: (NOTE: The equation is temporarily unavailable due to {equatiomatic} not currently having a method to convert glmmTMB models to LaTeX.)
 
 ```{r equation, message=FALSE}
-equatiomatic::extract_eq(
-  lmer_model,
-  wrap = TRUE,
-  terms_per_line = 2,
-  swap_var_names = c(
-    "total_deaths_per_day" = "Total Deaths per Day",
-    "population_z" = "County Population (z-score)",
-    "year_zero" = "Years since 2015",
-    "month" = "Month",
-    "region_code" = "County",
-    "county_set_code" = "County Set",
-    "state" = "State"
-  )
-) %>%
-  texPreview::tex_preview(
-    stem = "plot_equation-1",
-    fileDir = knitr::opts_chunk$get()$fig.path,
-    returnType = "html"
-  )
+# equatiomatic::extract_eq(
+#   lmer_model,
+#   wrap = TRUE,
+#   terms_per_line = 2,
+#   swap_var_names = c(
+#     "total_deaths_per_day" = "Total Deaths per Day",
+#     "population_z" = "County Population (z-score)",
+#     "year_zero" = "Years since 2015",
+#     "month" = "Month",
+#     "region_code" = "County",
+#     "county_set_code" = "County Set",
+#     "state" = "State"
+#   )
+# ) %>%
+#   texPreview::tex_preview(
+#     stem = "plot_equation-1",
+#     fileDir = knitr::opts_chunk$get()$fig.path,
+#     returnType = "html"
+#   )
 ```
 
 The model object is available at [`/blob/main/results/united_states_county_monthly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_model.RDS).
@@ -256,7 +257,7 @@ predict_check <- united_states_county_monthly_excess_deaths_estimates %>%
 result_corr <- cor.test(x = predict_check$total_deaths, y = predict_check$expected_deaths)
 ```
 
-Observed and expected deaths in January through March, 2020 are highly correlated, r = `r result_corr$estimate`.
+Observed and expected deaths in January through March, 2020, are highly correlated, r = `r result_corr$estimate`.
 As can be seen from the following scatterplot, total deaths (y-axis) tended to exceed expected deaths (x-axis).
 
 ```{r plot_comparison, message=FALSE, warning=FALSE}

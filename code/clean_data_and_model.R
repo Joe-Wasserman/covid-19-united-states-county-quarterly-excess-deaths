@@ -9,6 +9,7 @@ library(data.table)
 library(lubridate)
 library(aweek)
 library(lme4)
+library(glmmTMB)
 
 ## ---- import ----
 
@@ -290,19 +291,31 @@ united_states_county_monthly_deaths <- united_states_county_monthly_total_deaths
     census_division,
     by = "state"
   ) %>%
+  arrange(region_code, county_set_code, census_division, census_region) %>%
   mutate(
     total_deaths_per_day = total_deaths / days,
     population_z = (population - mean(population, na.rm = TRUE)) /
       sd(population, na.rm = (TRUE)),
     across(
-      c(region_code, county_set_code, census_division, census_region, quarter, month),
+      c(region_code, county_set_code, census_division, census_region),
       as_factor
     )
+  ) %>%
+  arrange(month) %>%
+  mutate(
+    across(
+      c(quarter, month),
+      as_factor
+    )
+  ) %>%
+  arrange(start_date) %>%
+  mutate(
+    time = as_factor(frank(start_date, ties.method = "dense"))
   ) %>%
   dplyr::select(
     country, state, region, region_code,
     county_set_code, census_division, census_region,
-    start_date, end_date, days, year, quarter, month,
+    start_date, end_date, days, year, quarter, month, time,
     population, population_z,
     total_deaths, total_deaths_per_day
   )
@@ -395,16 +408,6 @@ strictControl <- lmerControl(optCtrl = list(
 # NOTE: lme4::lmer() does not require nested random grouping factor syntax
 lmm_formulas <- list(
   # 1
-  # as.formula(
-  #   glue::glue(
-  #     "total_deaths_per_day ~ 1 +
-  #     population_z +
-  #     year_zero +
-  #     month +
-  #     (1 | region_code)"
-  #   )
-  # ),
-  # 2
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -415,29 +418,7 @@ lmm_formulas <- list(
       (1 | county_set_code)"
     )
   ),
-  # 3
-  # as.formula(
-  #   glue::glue(
-  #     "total_deaths_per_day ~ 1 +
-  #     population_z +
-  #     year_zero +
-  #     month +
-  #     (1 | region_code) +
-  #     (1 | census_division)"
-  #   )
-  # ),
-  # 4
-  # as.formula(
-  #   glue::glue(
-  #     "total_deaths_per_day ~ 1 +
-  #     population_z +
-  #     year_zero +
-  #     month +
-  #     (1 | region_code) +
-  #     (1 | census_region)"
-  #   )
-  # ),
-  # 5
+  # 2
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -449,7 +430,7 @@ lmm_formulas <- list(
       (1 | census_division)"
     )
   ),
-  # 6
+  # 3
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -461,7 +442,7 @@ lmm_formulas <- list(
       (1 | census_region)"
     )
   ),
-  # 7
+  # 4
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -470,6 +451,42 @@ lmm_formulas <- list(
       month +
       (1 | region_code) +
       (1 | state)"
+    )
+  ),
+  # 5
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      month +
+      (1 | region_code) +
+      (1 | county_set_code) +
+      (1 | state)"
+    )
+  ),
+  # 6
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      month +
+      (1 | region_code) +
+      (1 | state) +
+      (1 | census_division)"
+    )
+  ),
+  # 7
+  as.formula(
+    glue::glue(
+      "total_deaths_per_day ~ 1 +
+      population_z +
+      year_zero +
+      month +
+      (1 | region_code) +
+      (1 | state) +
+      (1 | census_region)"
     )
   ),
   # 8
@@ -481,7 +498,8 @@ lmm_formulas <- list(
       month +
       (1 | region_code) +
       (1 | county_set_code) +
-      (1 | state)"
+      (1 | state) +
+      (1 | census_division)"
     )
   ),
   # 9
@@ -492,43 +510,31 @@ lmm_formulas <- list(
       year_zero +
       month +
       (1 | region_code) +
-      (1 | state) +
-      (1 | census_division)"
-    )
-  ),
-  # 10
-  as.formula(
-    glue::glue(
-      "total_deaths_per_day ~ 1 +
-      population_z +
-      year_zero +
-      month +
-      (1 | region_code) +
+      (1 | county_set_code) +
       (1 | state) +
       (1 | census_region)"
     )
   ),
-  # 11
+  # 5 ar1
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
       month +
-      (1 | region_code) +
+      ar1(time - 1 | region_code) +
       (1 | county_set_code) +
-      (1 | state) +
-      (1 | census_division)"
+      (1 | state)"
     )
   ),
-  # 12
+  # 9 ar1
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
       month +
-      (1 | region_code) +
+      ar1(time - 1 | region_code) +
       (1 | county_set_code) +
       (1 | state) +
       (1 | census_region)"
@@ -536,17 +542,30 @@ lmm_formulas <- list(
   )
 )
 
-# run all models
-model_out <- lmm_formulas %>%
-  furrr::future_map(
+# set model type argument for running models
+
+model_type_list <- c(
+  rep("lmer", 9),
+  rep("glmmTMB", 2)
+)
+
+# run all lmm models
+model_out <- tibble(
+   expected_deaths_formula = lmm_formulas,
+   model_type = model_type_list
+  ) %>%
+  furrr::future_pmap(
     .,
     ~ train_expected_deaths_model(
       df = united_states_county_monthly_deaths,
-      expected_deaths_formula = .x,
+      expected_deaths_formula = ..1,
+      model_type = ..2,
+      family = "gaussian",
       period = "month",
       training_end_date = "2020-01-01"
     )
   )
+
 
 ## ---- training-performance ----
 # compare model performance metrics on training set
@@ -568,11 +587,11 @@ expected_and_excess_deaths <- model_out %>%
   )
 
 ## ---- validation-performance ----
-# compare model mean squared error on 2020 Q1 validation set
+# compare model mean squared error on 2020-01 + 2020-02 validation set
 model_mse <- expected_and_excess_deaths %>%
   imap_dfr(
     ~ .x %>%
-      filter(year == 2020L, month %in% c("1", "2", "3")) %>%
+      filter(year == 2020L, month %in% c("1", "2")) %>%
       summarise(
         model = .y,
         mse = mean(
@@ -661,7 +680,7 @@ fitted_outlier_plots <- data_fitted_outliers_only %>%
 
 ## ---- final-model ----
 
-final_model <- 5
+final_model <- 10
 
 united_states_county_monthly_model <- model_out[[final_model]]
 united_states_county_monthly_results <- expected_and_excess_deaths[[final_model]]
