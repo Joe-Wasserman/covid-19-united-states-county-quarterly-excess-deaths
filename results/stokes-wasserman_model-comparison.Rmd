@@ -1,0 +1,272 @@
+---
+title: "Stokes-Wasserman model comparison"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggh4x)
+library(data.table)
+library(lubridate)
+library(equatiomatic)
+library(knitr)
+library(tinytex)
+library(texPreview)
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  collapse = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  dev.args = list(png = list(type = "cairo")), dpi = 96,
+  fig.path = "model-comparison_files/"
+)
+
+options(
+  scipen = 999,
+  digits = 3,
+  knitr.kable.NA = "n/a"
+)
+```
+
+```{r import}
+united_states_county_monthly_excess_deaths_estimates <- data.table::fread(
+  file.path(
+    here::here(),
+    "results/united_states_county_monthly_excess_deaths_estimates.csv"
+  ),
+  keepLeadingZeros = TRUE
+)
+
+# for comparison to acstokes models
+# 2020: Jan-Dec
+# 2021: Jan-Oct
+estimates_jwasserman <- united_states_county_monthly_excess_deaths_estimates %>% 
+  filter(
+    year == 2020L | 
+      (year == 2021L & start_date < "2021-11-01")
+  ) %>% 
+  group_by(region_code, year) %>% 
+  summarise(
+    across(
+      c(total_deaths, expected_deaths, excess_deaths),
+      sum
+    )
+  ) %>% 
+  ungroup()
+
+estimates_acstokes <- list.files(
+  file.path(here::here(), "data"),
+    pattern = "ex.*.csv",
+    full.names = TRUE
+  )[[1]] %>% 
+  data.table::fread(keepLeadingZeros = TRUE) %>% 
+  pivot_longer(
+    cols = matches(".*202[0-1]{1}$"),
+    names_to = c(".value", "year"),
+    names_pattern = "(.*)(202[0-1]{1})"
+  ) %>% 
+  mutate(year = as.integer(year))
+
+estimates_combo <- estimates_jwasserman %>% 
+  inner_join(
+    estimates_acstokes,
+    by = c(
+      "region_code" = "FIPSCode",
+      "year" = "year"
+    )
+  )
+
+```
+
+```{r plot_comparison, message=FALSE, warning=FALSE}
+g <- ggplot(
+  estimates_combo,
+  aes(
+    x = expDeathsMed,
+    y = expected_deaths
+  )
+)
+
+p <- g +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    fullrange = TRUE,
+    color = "red",
+    size = .3,
+    linetype = "dotted"
+  ) +
+  geom_point(
+    shape = 21,
+    color = "grey20",
+    alpha = .6
+  ) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    size = 0.3,
+    color = "grey25"
+  ) +
+  facet_wrap(vars(year)) +
+  # ggrepel::geom_label_repel(
+  #   data = filter(
+  #     estimates_combo,
+  #     expDeathsMed / expected_deaths == max(expDeathsMed / expected_deaths) |
+  #       expected_deaths / expected_deaths == max(expected_deaths / expected_deaths)
+  #   ),
+  #   aes(label = paste(countyName, stateStr)),
+  #   color = "grey10",
+  #   segment.color = "grey40",
+  #   size = 3,
+  #   min.segment.length = 0,
+  #   force = 7,
+  #   force_pull = .0001,
+  #   point.padding = .4,
+  #   label.padding = .1,
+  #   max.time = 15,
+  #   label.size = NA,
+  #   nudge_x = 3000,
+  #   # nudge_y = 2500,
+  #   seed = 20211004
+  # ) +
+  # colorspace::scale_fill_continuous_diverging(palette = "cork") +
+  coord_equal() +
+  theme_minimal() +
+  labs(
+    title = "Comparison of model-predicted expected deaths",
+    x = "acstokes expected deaths",
+    y = "jwasserman expected deaths"
+  )
+
+print(p)
+```
+
+```{r plot benchmarks, include=FALSE, eval=FALSE}
+
+g_acstokes <- ggplot(
+  estimates_combo,
+  aes(
+    x = deaths,
+    y = expDeathsMed
+  )
+)
+
+g_jwasserman <- ggplot(
+  estimates_combo,
+  aes(
+    x = deaths,
+    y = expected_deaths
+  )
+)
+
+p_acstokes <- g_acstokes +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    fullrange = TRUE,
+    color = "red",
+    size = .3,
+    linetype = "dotted"
+  ) +
+  geom_point(
+    shape = 21,
+    color = "grey20",
+    alpha = .6
+  ) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    size = 0.3,
+    color = "grey25"
+  ) +
+  facet_wrap(vars(year)) +
+  ggrepel::geom_label_repel(
+    data = filter(
+      estimates_combo,
+      expDeathsMed / deaths > 1.25 |
+        deaths / expected_deaths > 1.25
+    ),
+    aes(label = paste(countyName, stateStr)),
+    color = "grey10",
+    segment.color = "grey40",
+    size = 3,
+    min.segment.length = 0,
+    force = 10,
+    force_pull = .0001,
+    point.padding = .4,
+    label.padding = .1,
+    max.time = 15,
+    label.size = NA,
+    nudge_x = 2000,
+    nudge_y = 1000,
+    seed = 20211004
+  ) +
+  # colorspace::scale_fill_continuous_diverging(palette = "cork") +
+  coord_equal() +
+  theme_minimal() +
+  labs(
+    title = "Comparison of acstokes model-predicted expected deaths to recorded deaths",
+    x = "recorded deaths",
+    y = "acstokes expected deaths"
+  )
+
+print(p_acstokes)
+
+p_jwasserman <- g_jwasserman +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    fullrange = TRUE,
+    color = "red",
+    size = .3,
+    linetype = "dotted"
+  ) +
+  geom_point(
+    shape = 21,
+    color = "grey20",
+    alpha = .6
+  ) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    size = 0.3,
+    color = "grey25"
+  ) +
+  facet_wrap(vars(year)) +
+  ggrepel::geom_label_repel(
+    data = filter(
+      estimates_combo,
+      expDeathsMed / deaths > 1.25 |
+        deaths / expected_deaths > 1.25
+    ),
+    aes(label = paste(countyName, stateStr)),
+    color = "grey10",
+    segment.color = "grey40",
+    size = 3,
+    min.segment.length = 0,
+    force = 10,
+    force_pull = .0001,
+    point.padding = .4,
+    label.padding = .1,
+    max.time = 15,
+    label.size = NA,
+    nudge_x = 2000,
+    nudge_y = 1000,
+    seed = 20211004
+  ) +
+  # colorspace::scale_fill_continuous_diverging(palette = "cork") +
+  coord_equal() +
+  theme_minimal() +
+  labs(
+    title = "Comparison of jwasserman model-predicted expected deaths to recorded deaths",
+    x = "recorded deaths",
+    y = "jwasserman expected deaths"
+  )
+
+print(p_jwasserman)
+```
+
+```{r, echo=TRUE}
+sessionInfo()
+```
