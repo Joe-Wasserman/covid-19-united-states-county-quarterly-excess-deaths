@@ -1,9 +1,9 @@
 ---
 title: "Stokes-Wasserman model comparison"
 output: 
-  html_document:
+  github_document:
     toc: true
-    toc_float: true
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
@@ -200,7 +200,7 @@ tibble(
 
 # Largest Discrepancies (Tables)
 
-```{r table some values}
+```{r table some values, results='asis'}
 
 dat <- estimates_combo %>% 
   select(
@@ -238,7 +238,7 @@ dat %>%
     caption = "Expected Deaths per 100k, 50 Largest Discrepancies",
     digits = 0
   ) %>% 
-  kableExtra::kable_styling(bootstrap_options = "hover", font_size = 10)
+  kableExtra::kable_styling(font_size = 10)
 
 dat %>% 
   arrange(desc(excess_ratio_max)) %>% 
@@ -250,7 +250,7 @@ dat %>%
     caption = "Excess Deaths per 100k, 50 Largest Discrepancies",
     digits = 0
   ) %>% 
-  kableExtra::kable_styling(bootstrap_options = "hover", font_size = 10)
+  kableExtra::kable_styling(font_size = 10)
 
 # dat %>% 
 #   arrange(excess_ratio_max) %>% 
@@ -274,7 +274,7 @@ dat %>%
     caption = "Discrepancies between Observed Deaths",
     digits = 0
   ) %>% 
-  kableExtra::kable_styling(bootstrap_options = "hover", font_size = 10)
+  kableExtra::kable_styling(font_size = 10)
   
 ```
 
