@@ -1,6 +1,9 @@
 ---
 title: "Stokes-Wasserman model comparison"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
@@ -75,16 +78,28 @@ estimates_combo <- estimates_jwasserman %>%
       "region_code" = "FIPSCode",
       "year" = "year"
     )
+  ) %>% 
+  mutate(
+    # deaths_discrepancy = total_deaths == deaths,
+    # recompute excess deaths using acstokes death counts
+    # excess_deaths = deaths - expected_deaths,
+    across(
+      c(expected_deaths, excess_deaths, expDeathsMed, excDeathsMed),
+      list(per100k = ~ 100000 * .x / pop)
+    )
   )
 
 ```
 
-```{r plot_comparison, message=FALSE, warning=FALSE}
-g <- ggplot(
-  estimates_combo,
+```{r plot_results_comparisons, message=FALSE, warning=FALSE}
+
+plot_result_comparisons <- function(.data, .x, .y, var_name, difference_label_threshold = 1.4) {
+  
+  g <- ggplot(
+  .data,
   aes(
-    x = expDeathsMed,
-    y = expected_deaths
+    x = {{ .x }},
+    y = {{ .y }}
   )
 )
 
@@ -108,38 +123,159 @@ p <- g +
     size = 0.3,
     color = "grey25"
   ) +
-  facet_wrap(vars(year)) +
-  # ggrepel::geom_label_repel(
-  #   data = filter(
-  #     estimates_combo,
-  #     expDeathsMed / expected_deaths == max(expDeathsMed / expected_deaths) |
-  #       expected_deaths / expected_deaths == max(expected_deaths / expected_deaths)
-  #   ),
-  #   aes(label = paste(countyName, stateStr)),
-  #   color = "grey10",
-  #   segment.color = "grey40",
-  #   size = 3,
-  #   min.segment.length = 0,
-  #   force = 7,
-  #   force_pull = .0001,
-  #   point.padding = .4,
-  #   label.padding = .1,
-  #   max.time = 15,
-  #   label.size = NA,
-  #   nudge_x = 3000,
-  #   # nudge_y = 2500,
-  #   seed = 20211004
-  # ) +
+  facet_grid(
+    cols = vars(year)
+  ) +
+  ggrepel::geom_label_repel(
+    data = filter(
+      .data,
+      abs({{ .x }} / {{ .y }}) > difference_label_threshold |
+        abs({{ .y }} / {{ .x }}) > difference_label_threshold
+    ),
+    aes(label = paste(countyName, stateStr)),
+    color = "grey10",
+    segment.color = "grey50",
+    size = 3,
+    min.segment.length = 0,
+    force = 7,
+    force_pull = .0001,
+    point.padding = .4,
+    label.padding = .1,
+    max.time = 15,
+    label.size = NA,
+    nudge_x = 1000,
+    # nudge_y = 2500,
+    seed = 20211004
+  ) +
   # colorspace::scale_fill_continuous_diverging(palette = "cork") +
   coord_equal() +
+  expand_limits(x = 0, y = 0) +
   theme_minimal() +
+  theme(aspect.ratio = 1) +
   labs(
-    title = "Comparison of model-predicted expected deaths",
-    x = "acstokes expected deaths",
-    y = "jwasserman expected deaths"
+    title = glue::glue("Comparison of model-predicted {var_name}"),
+    x = glue::glue("acstokes {var_name}"),
+    y = glue::glue("jwasserman {var_name}")
   )
 
 print(p)
+  
+}
+
+```
+
+# Model Estimate Comparison Plots
+
+```{r plot comparisons}
+
+tibble(
+  .x = quos(
+    expDeathsMed,
+    expDeathsMed_per100k,
+    excDeathsMed,
+    excDeathsMed_per100k
+    ),
+  .y = quos(
+    expected_deaths,
+    expected_deaths_per100k,
+    excess_deaths,
+    excess_deaths_per100k
+    ),
+  var_name = c(
+    "expected deaths",
+    "expected deaths / 100k",
+    "excess deaths",
+    "excess deaths / 100k"
+    ),
+  difference_label_threshold = c(
+    1.4,
+    25,
+    1.4,
+    25
+  )
+) %>% 
+  pwalk(plot_result_comparisons, estimates_combo)
+
+```
+
+# Largest Discrepancies (Tables)
+
+```{r table some values}
+
+dat <- estimates_combo %>% 
+  select(
+    year,
+    region_code,
+    stateStr,
+    countyName,
+    total_deaths,
+    deaths,
+    pop,
+    expected_deaths,
+    expDeathsMed,
+    excess_deaths,
+    excDeathsMed,
+    expected_deaths_per100k,
+    expDeathsMed_per100k,
+    excess_deaths_per100k,
+    excDeathsMed_per100k
+  ) %>% 
+  mutate(
+    expected_ratio1 = expected_deaths_per100k / expDeathsMed_per100k,
+    expected_ratio2 = expDeathsMed_per100k / expected_deaths_per100k,
+    expected_ratio_max = pmax(abs(expected_ratio1), abs(expected_ratio2), na.rm = TRUE),
+    excess_ratio1 = excess_deaths_per100k / excDeathsMed_per100k,
+    excess_ratio2 = excDeathsMed_per100k / excess_deaths_per100k,
+    excess_ratio_max = pmax(abs(excess_ratio1), abs(excess_ratio2), na.rm = TRUE)
+  )
+  
+dat %>% 
+  arrange(desc(expected_ratio_max)) %>% 
+  slice(1:50) %>% 
+  arrange(year, desc(expected_ratio1)) %>%
+  select(-c(expected_ratio1:excess_ratio_max)) %>% 
+  kable(
+    caption = "Expected Deaths per 100k, 50 Largest Discrepancies",
+    digits = 0
+  ) %>% 
+  kableExtra::kable_styling(bootstrap_options = "hover", font_size = 10)
+
+dat %>% 
+  arrange(desc(excess_ratio_max)) %>% 
+  filter(!is.na(excess_deaths_per100k)) %>% 
+  slice(1:50) %>% 
+  arrange(year, desc(excess_ratio1)) %>%
+  select(-c(expected_ratio1:excess_ratio_max)) %>% 
+  kable(
+    caption = "Excess Deaths per 100k, 50 Largest Discrepancies",
+    digits = 0
+  ) %>% 
+  kableExtra::kable_styling(bootstrap_options = "hover", font_size = 10)
+
+# dat %>% 
+#   arrange(excess_ratio_max) %>% 
+#   slice(100) %>% 
+#   arrange(year, excess_ratio1) %>% 
+#   select(-c(expected_ratio1:excess_ratio_max)) %>% 
+#   kable(
+#     caption = "Excess Deaths / 100k Largest Discrepancies",
+#     digits = 0
+#   ) %>% 
+#   kableExtra::kable_styling(bootstrap_options = "hover", font_size = 7)
+
+dat %>% 
+  mutate(death_diff = abs(total_deaths - deaths)) %>%
+  filter(!is.na(death_diff)) %>% 
+  arrange(desc(death_diff)) %>% 
+  slice(1:50) %>% 
+  arrange(year, desc(death_diff)) %>%
+  select(-c(expected_ratio1:excess_ratio_max)) %>% 
+  kable(
+    caption = "Discrepancies between Observed Deaths",
+    digits = 0
+  ) %>% 
+  kableExtra::kable_styling(bootstrap_options = "hover", font_size = 10)
+  
 ```
 
 ```{r plot benchmarks, include=FALSE, eval=FALSE}
