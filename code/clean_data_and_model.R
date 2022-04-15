@@ -3,7 +3,7 @@
 
 # libraries necessary for analyses
 library(tidyverse)
-library(furrr)
+# library(furrr)
 library(tidycensus)
 library(data.table)
 library(lubridate)
@@ -386,7 +386,8 @@ icc <- list(
   c("region_code", "county_set_code", "state", "census_division", "month"),
   c("region_code", "county_set_code", "state", "census_region", "month")
 ) %>%
-  furrr::future_map(
+  # furrr::future_map(
+  purrr::map(
     .,
     ~ multilevelTools::iccMixed(
       dv = "total_deaths_per_day",
@@ -404,9 +405,12 @@ strictControl <- lmerControl(optCtrl = list(
   ftol_abs = 1e-12
 ))
 
-# Specify competing formulas for lmm with different nesting structures
-# NOTE: lme4::lmer() does not require nested random grouping factor syntax
-lmm_formulas <- list(
+# Specify competing formulas for different:
+# nesting structures
+# link functions
+# AR relationships
+# NOTE: these packages do not require nested random grouping factor syntax
+formula_list <- list(
   # 1
   as.formula(
     glue::glue(
@@ -515,7 +519,7 @@ lmm_formulas <- list(
       (1 | census_region)"
     )
   ),
-  # 5 ar1
+  # 5 ar1 lmm
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
@@ -539,28 +543,89 @@ lmm_formulas <- list(
       (1 | state) +
       (1 | census_region)"
     )
+  ),
+  # 5 ar1 NB2 glmm
+  as.formula(
+    glue::glue(
+      "total_deaths ~ 1 +
+      population_z +
+      year_zero +
+      month +
+      ar1(time + 0 | region_code) +
+      (1 | county_set_code) +
+      (1 | state)"
+    )
+  ),
+  # 5 ar1 NB1 glmm
+  as.formula(
+    glue::glue(
+      "total_deaths ~ 1 +
+      population_z +
+      year_zero +
+      month +
+      ar1(time + 0 | region_code) +
+      (1 | county_set_code) +
+      (1 | state)"
+    )
+  ),
+  # 5 ar1 composite poisson glmm
+  as.formula(
+    glue::glue(
+      "total_deaths ~ 1 +
+      population_z +
+      year_zero +
+      month +
+      ar1(time + 0 | region_code) +
+      (1 | county_set_code) +
+      (1 | state)"
+    )
+  ),
+  # 5 ar1 generalized poisson glmm
+  as.formula(
+    glue::glue(
+      "total_deaths ~ 1 +
+      population_z +
+      year_zero +
+      month +
+      ar1(time + 0 | region_code) +
+      (1 | county_set_code) +
+      (1 | state)"
+    )
   )
 )
 
-# set model type argument for running models
-
+# set model type (ie, estimating package) argument for running models
 model_type_list <- c(
   rep("lmer", 9),
-  rep("glmmTMB", 2)
+  rep("glmmTMB", 6)
 )
 
-# run all lmm models
+# set model family for running models
+family_list <- c(
+  rep("gaussian", 11),
+  "compois",
+  "genpois",
+  "nbinom1",
+  "nbinom2"
+)
+
+# gauss runs easily, nbinom2 and compois don't complete after several hours
+
+
+# run all models
 model_out <- tibble(
-   expected_deaths_formula = lmm_formulas,
-   model_type = model_type_list
-  ) %>%
-  furrr::future_pmap(
+  expected_deaths_formula = formula_list,
+  model_type = model_type_list,
+  family = family_list
+) %>%
+  # furrr::future_pmap(
+  purrr::pmap(
     .,
     ~ train_expected_deaths_model(
       df = united_states_county_monthly_deaths,
       expected_deaths_formula = ..1,
       model_type = ..2,
-      family = "gaussian",
+      family = ..3,
       period = "month",
       training_end_date = "2020-01-01"
     )
@@ -577,11 +642,12 @@ model_performance <- model_out %>%
   performance::compare_performance()
 
 expected_and_excess_deaths <- model_out %>%
-  furrr::future_map(
+  # furrr::future_map(
+  purrr::map(
     .,
     ~ estimate_excess_deaths(
       df = united_states_county_monthly_deaths,
-      expected_deaths_model = .x[[1]],
+      expected_deaths_model = model_out[[1]][[1]],
       period = "month"
     )
   )
@@ -606,7 +672,8 @@ model_mse <- expected_and_excess_deaths %>%
 
 # identify outliers in fitted timeseries of data with forecast::tsoutliers
 model_volatility <- expected_and_excess_deaths %>%
-  furrr::future_map(
+  # furrr::future_map(
+  purrr::map(
     ~ .x %>%
       select(region_code, expected_deaths) %>%
       group_by(region_code) %>%
@@ -668,7 +735,8 @@ plot_ts_with_outliers <- function(region_code, fitted_ts, fitted_outliers) {
 }
 
 fitted_outlier_plots <- data_fitted_outliers_only %>%
-  furrr::future_map(
+  # furrr::future_map(
+  purrr::map(
     .,
     ~ if (nrow(.x) > 0) {
       .x %>%

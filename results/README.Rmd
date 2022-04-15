@@ -109,6 +109,18 @@ model_performance %>%
   )
 ```
 
+## DEV: Model summary for all glmmTMB output
+```{r glmmtmb summaries, include=TRUE, message=TRUE}
+model_out %>%
+  walk(
+    .,
+    ~ .x[[1]] %>% 
+      summary() %>% 
+      print()
+  )
+```
+
+
 # Performance on January and February, 2020 data
 
 Compare mean squared error (MSE) of model-predicted death rates against observed death rates in January and February, 2020.

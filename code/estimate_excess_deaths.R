@@ -17,7 +17,14 @@ train_expected_deaths_model <- function(df, expected_deaths_formula = NULL, peri
   # }
 
   message(glue::glue(
-    "Fitting model_type {model_type} with data prior to {training_end_date}"
+    "
+    Fitting a {model_type} model, family = {family}.
+    Period = {period}.
+    Data after {training_end_date} are excluded from the training set.
+    Model equation:
+    {deparse(expected_deaths_formula)}
+
+    "
   ))
 
   year_min <- min(df$year, na.rm = TRUE)
@@ -105,7 +112,7 @@ estimate_excess_deaths <- function(df, expected_deaths_model = NULL, period = "m
   } else if (class(expected_deaths_model) == "glmmTMB") {
     outcome_variable <- names(expected_deaths_model$modelInfo$respCol)
   } else {
-    #placeholder - try both methods defined above
+    # placeholder - try both methods defined above
     try(outcome_variable <- names(expected_deaths_model@frame)[[1]])
     try(outcome_variable <- names(expected_deaths_model$modelInfo$respCol))
   }
