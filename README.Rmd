@@ -1,5 +1,5 @@
 ---
-title: "COVID-19 United States Excess Deaths by county and quarter"
+title: "COVID-19 United States Excess Deaths by county and month"
 output: github_document
 ---
 
@@ -38,45 +38,52 @@ options(
 lmer_model <- readRDS(
   file = file.path(
     here::here(),
-    "results/united_states_county_quarterly_model.RDS"
+    "results/united_states_county_monthly_model.RDS"
   )
 )
 
-united_states_county_quarterly_excess_deaths_estimates <- data.table::fread(
+united_states_county_monthly_excess_deaths_estimates <- data.table::fread(
   file.path(
     here::here(),
-    "results/united_states_county_quarterly_excess_deaths_estimates.csv"
+    "results/united_states_county_monthly_excess_deaths_estimates.csv"
   ),
   keepLeadingZeros = TRUE
 )
 
-total_excess_deaths_2020 <- united_states_county_quarterly_excess_deaths_estimates %>%
-  filter(year == 2020L) %>%
+total_excess_deaths_2020 <- united_states_county_monthly_excess_deaths_estimates %>%
+  filter(year == 2020L, start_date >= "2020-03-01") %>%
   pull(excess_deaths) %>%
   sum(na.rm = TRUE)
 
-total_excess_deaths_2021 <- united_states_county_quarterly_excess_deaths_estimates %>%
-  filter(year == 2021L) %>%
+total_excess_deaths_2021 <- united_states_county_monthly_excess_deaths_estimates %>%
+  filter(year == 2021L, start_date < "2021-12-01") %>%
   pull(excess_deaths) %>%
   sum(na.rm = TRUE)
 ```
 
-This repository contains code and data to estimate **expected deaths** and **excess deaths** in the United States in 2020 and 2021 by **county** and **quarter**.
-This model estimates that there were about `r round(total_excess_deaths_2020)` excess deaths in the United States in 2020 and `r round(total_excess_deaths_2021)` in the first two quarters of 2021, for a total of `r round(sum(total_excess_deaths_2020, total_excess_deaths_2021))`.
+This repository contains code and data to estimate **expected deaths** and **excess deaths** in the United States in 2020 and 2021 by **county** and **month**.
+This model estimates that there were about `r round(total_excess_deaths_2020)` excess deaths in the United States in 2020 (excluding January and February) and `r round(total_excess_deaths_2021)` in 2021 (excluding December), for a total of `r round(sum(total_excess_deaths_2020, total_excess_deaths_2021))`.
 
-Estimated excess deaths are available at [`/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv).
+Estimated excess deaths are available at [`/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv).
 
 
-#### Nationwide United States Mortality, 2015 through June 2021
+#### Nationwide United States Mortality, 2011 through 2021 (provisional and partial)
 ```{r results summary, message=FALSE, warning=FALSE}
 
-deaths_nationwide_summary <- united_states_county_quarterly_excess_deaths_estimates %>% 
+deaths_nationwide_summary <- united_states_county_monthly_excess_deaths_estimates %>% 
   group_by(start_date) %>% 
   summarise(
     across(c(total_deaths, expected_deaths, excess_deaths), sum, na.rm = TRUE),
     .groups = "drop"
   ) %>% 
-  mutate(period = date(start_date))
+  mutate(period = date(start_date)) %>% 
+  # exclude the prior month from plot due to partial data
+  filter(
+    period < floor_date(
+      Sys.Date() - months(1), 
+      unit = "month"
+    )
+  )
 
 g <- ggplot(deaths_nationwide_summary, aes(x = period))
 
@@ -93,42 +100,42 @@ p <- g +
     alpha = .7
   ) +
   geom_vline(
-    xintercept = date("2020-04-01"),
+    xintercept = date("2020-03-01"),
     linetype = "dashed"
   ) +
   annotate(
-    geom = "curve", 
-    x = date("2018-10-01"), 
-    y = 880000, 
-    xend = date("2020-03-20"), 
-    yend = 850000, 
-    curvature = -.2, 
+    geom = "curve",
+    x = date("2018-10-01"),
+    y = 310000,
+    xend = date("2020-02-20"),
+    yend = 310000,
+    curvature = -.2,
     arrow = arrow(length = unit(3, "mm"))
   ) +
   annotate(
-    geom = "text", 
-    x = date("2018-09-20"), 
-    y = 880000, 
-    label = "April 2020 - June 2020, the beginning of the\nCOVID-19 pandemic in the United States", 
+    geom = "text",
+    x = date("2018-09-20"),
+    y = 310000,
+    label = "March 2020, the beginning of the\nCOVID-19 pandemic in the United States",
     hjust = "right"
   ) +
-  annotate(
-    geom = "curve", 
-    x = date("2019-12-01"), 
-    y = 630000, 
-    xend = date("2021-04-01"), 
-    yend = 720000, 
-    curvature = .4, 
-    arrow = arrow(length = unit(3, "mm"))
-  ) +
-  annotate(
-    geom = "text", 
-    x = date("2019-11-20"), 
-    y = 620000, 
-    label = "Recent provisional mortality data\nare underreported due to reporting lags",
-    hjust = "right"
-  ) +
-  scale_color_viridis_d(option = "cividis", end = .6) +
+  # annotate(
+  #   geom = "curve", 
+  #   x = date("2019-12-01"), 
+  #   y = 630000, 
+  #   xend = date("2021-04-01"), 
+  #   yend = 720000, 
+  #   curvature = .4, 
+  #   arrow = arrow(length = unit(3, "mm"))
+  # ) +
+  # annotate(
+  #   geom = "text", 
+  #   x = date("2019-11-20"), 
+  #   y = 620000, 
+  #   label = "Recent provisional mortality data\nare underreported due to reporting lags",
+  #   hjust = "right"
+  # ) +
+  scale_color_viridis_d(option = "cividis", end = .6, direction = -1) +
   scale_fill_viridis_d(option = "cividis", na.translate = FALSE) +
   scale_x_date(
     date_breaks = "1 year",
@@ -140,7 +147,7 @@ p <- g +
     color = guide_legend(NULL)
   ) +
   labs(
-    x = "Quarter",
+    x = "Month",
     y = "Deaths"
   ) +
   theme_minimal() +
@@ -152,7 +159,7 @@ p <- g +
 print(p)
 ```
 
-Excess mortality for the quarters in which total deaths exceeded expected deaths are highlighted in blue.
+Excess mortality for the months in which total deaths exceeded expected deaths are highlighted in blue.
 
 # Data Sources
 
@@ -160,22 +167,26 @@ Excess mortality for the quarters in which total deaths exceeded expected deaths
 
   https://wonder.cdc.gov/ucd-icd10.html
   
-  These public-use historical mortality data were obtained for years 2015-2019 and used to estimate the expected deaths model.
+  These public-use historical mortality data were obtained for years 2011-2020 and used to estimate the expected deaths model.
+  2020 data were also compared against estimated expected deaths to calculate excess deaths.
   Because these data have an unusual and specific license, they are not included as part of the repository, but can be freely downloaded from https://wonder.cdc.gov/ucd-icd10.html.
   
   Note: County-months wither fewer than 10 deaths are censored in the source data.
 
-* NCHS Provisional COVID-19 Deaths by Quarter and County
+* CDC WONDER provisional and partial all-cause deaths and deaths involving COVID-19 by county and month
 
-  https://data.cdc.gov/NCHS/AH-Provisional-COVID-19-Death-Counts-by-Quarter-an/dnhi-s2bf
+  https://wonder.cdc.gov/mcd-icd10-provisional.html
   
-  These public domain all-cause and COVID-19 mortality data were obtained for 2020-2021 and compared to estimated expected deaths to calculate excess deaths.
+  Example query: https://wonder.cdc.gov/controller/saved/D176/D273F449
   
-  Note: Values for county-quarters with fewer than 9 deaths are suppressed in these data.
+  These public-use provisional and partial mortality data were obtained for 2021 and and compared to estimated expected deaths to calculate excess deaths.
+  Because these data have an unusual and specific license, they are not included as part of the repository, but can be freely downloaded from https://wonder.cdc.gov/ucd-icd10.html.
+  
+  Note: Values for county-months with fewer than 10 deaths are suppressed in these data.
   
 * US Census Population Estimates
 
-  Population estimates for 2015-2020 were retrieved from the [US Census Bureau Population Estimates](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-counties-total.html), because these data are not yet included in the Census Bureau Data API.
+  Population estimates for 2011-2020 were retrieved from the [US Census Bureau Population Estimates](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-counties-total.html), because these data are not yet included in the Census Bureau Data API.
   2020 population estimates were used for 2021.
   
   Note: This product uses Census Bureau data but is not endorsed or certified by the Census Bureau.
@@ -183,7 +194,7 @@ Excess mortality for the quarters in which total deaths exceeded expected deaths
 # Excess Deaths Model
 
   The excess deaths model used began as an adaptation of *The Economist*'s [excess mortality model](https://github.com/TheEconomist/covid-19-excess-deaths-tracker), but has since diverged.
-  For details on model selection and performance, see [`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
+  For details on model selection and performance, see [`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/README.md).
   
   Given the large number of counties in the United States (over 3000), a linear mixed model with county, county set, and census division as random grouping factors was used to make estimation tractable.
   These random grouping factors enable each county, county set, and state to have their own intercepts in the final model.
@@ -192,9 +203,9 @@ Excess mortality for the quarters in which total deaths exceeded expected deaths
   
   * county population (z-scored)
   
-  * years since 2015
+  * years since 2011
   
-  * quarter of the year (fixed grouping factor)
+  * month of the year (fixed grouping factor)
   
   * county (random grouping factor nested within county set)
   
@@ -213,7 +224,7 @@ equatiomatic::extract_eq(
     "total_deaths_per_day" = "Total Deaths per Day",
     "population_z" = "County Population (z-score)",
     "year_zero" = "Years since 2015",
-    "quarter" = "Quarter",
+    "month" = "Month",
     "region_code" = "County",
     "county_set_code" = "County Set",
     "state" = "State"
@@ -226,34 +237,34 @@ equatiomatic::extract_eq(
   )
 ```
 
-The model object is available at [`/blob/main/results/united_states_county_quarterly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_model.RDS).
+The model object is available at [`/blob/main/results/united_states_county_monthly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_model.RDS).
 
-The model estimates for each observation, including fitted values and residuals, are available at [`/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv).
-Note that these estimates are only y-hat directly from the initial model, **not** predicted values on the full dataset, which are [available here](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv)..
+The model estimates for each observation, including fitted values and residuals, are available at [`/blob/main/results/united_states_county_monthly_fitted_deaths_per_day_estimate.csv`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_fitted_deaths_per_day_estimate.csv).
+Note that these estimates are only y-hat directly from the initial model, **not** predicted values on the full dataset, which are [available here](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv)..
 
 # Model Performance
 
-For more details on model selection and performance, see [`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
+For more details on model selection and performance, see [`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/README.md).
 
-Because the COVID-19 pandemic only began in the United States partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in Q1 2020.
+Because the COVID-19 pandemic only began in the United States partway through March, 2020, we can evaluate model performance by examining concordance of predicted and observed deaths in the counties that were unaffected by COVID-19 in March, 2020.
 
 ```{r performance}
-predict_check <- united_states_county_quarterly_excess_deaths_estimates %>%
+predict_check <- united_states_county_monthly_excess_deaths_estimates %>%
   filter(start_date == "2020-01-01")
 
 result_corr <- cor.test(x = predict_check$total_deaths, y = predict_check$expected_deaths)
 ```
 
-Observed and expected deaths in Q1 2020 are highly correlated, r = `r result_corr$estimate`.
-As can be seen from the following scatterplot, total deaths (x-axis) tended to exceed expected deaths (y-axis).
+Observed and expected deaths in March, 2020 are highly correlated, r = `r result_corr$estimate`.
+As can be seen from the following scatterplot, total deaths (y-axis) tended to exceed expected deaths (x-axis).
 Unsurprisingly, some of the counties that were hardest hit early in the pandemic are among those with total deaths that most diverge from expected deaths.
 
 ```{r plot_comparison, message=FALSE, warning=FALSE}
 g <- ggplot(
   predict_check,
   aes(
-    x = total_deaths,
-    y = expected_deaths
+    x = expected_deaths,
+    y = total_deaths
   )
 )
 
@@ -280,8 +291,9 @@ p <- g +
   ggrepel::geom_label_repel(
     data = filter(
       predict_check,
-      total_deaths > 5750 |
-        total_deaths / expected_deaths > 1.35
+      total_deaths > 2000 |
+        (total_deaths / expected_deaths > 1.2 &
+           total_deaths > 1000)
     ),
     aes(label = region),
     color = "grey10",
@@ -294,8 +306,8 @@ p <- g +
     label.padding = .1,
     max.time = 5,
     label.size = NA,
-    nudge_x = 2000,
-    nudge_y = -1000,
+    nudge_x = -2000,
+    nudge_y = 1000,
     seed = 20211004
   ) +
   colorspace::scale_fill_continuous_diverging(palette = "cork") +

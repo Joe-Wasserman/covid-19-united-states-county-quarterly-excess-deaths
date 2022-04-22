@@ -1,4 +1,4 @@
-COVID-19 United States Excess Deaths by county and quarter
+COVID-19 United States Excess Deaths by county and month
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -7,19 +7,20 @@ COVID-19 United States Excess Deaths by county and quarter
 
 This repository contains code and data to estimate **expected deaths**
 and **excess deaths** in the United States in 2020 and 2021 by
-**county** and **quarter**. This model estimates that there were about
-411714 excess deaths in the United States in 2020 and 138509 in the
-first two quarters of 2021, for a total of 550223.
+**county** and **month**. This model estimates that there were about
+467602 excess deaths in the United States in 2020 (excluding January and
+February) and 417400 in 2021 (excluding December), for a total of
+885002.
 
 Estimated excess deaths are available at
-[`/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv).
+[`/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv).
 
-#### Nationwide United States Mortality, 2015 through June 2021
+#### Nationwide United States Mortality, 2011 through 2021 (provisional and partial)
 
 ![](README_files/results%20summary-1.png)<!-- -->
 
-Excess mortality for the quarters in which total deaths exceeded
-expected deaths are highlighted in blue.
+Excess mortality for the months in which total deaths exceeded expected
+deaths are highlighted in blue.
 
 # Data Sources
 
@@ -28,28 +29,36 @@ expected deaths are highlighted in blue.
     <https://wonder.cdc.gov/ucd-icd10.html>
 
     These public-use historical mortality data were obtained for years
-    2015-2019 and used to estimate the expected deaths model. Because
-    these data have an unusual and specific license, they are not
-    included as part of the repository, but can be freely downloaded
-    from <https://wonder.cdc.gov/ucd-icd10.html>.
+    2011-2020 and used to estimate the expected deaths model. 2020 data
+    were also compared against estimated expected deaths to calculate
+    excess deaths. Because these data have an unusual and specific
+    license, they are not included as part of the repository, but can be
+    freely downloaded from <https://wonder.cdc.gov/ucd-icd10.html>.
 
     Note: County-months wither fewer than 10 deaths are censored in the
     source data.
 
--   NCHS Provisional COVID-19 Deaths by Quarter and County
+-   CDC WONDER provisional and partial all-cause deaths and deaths
+    involving COVID-19 by county and month
 
-    <https://data.cdc.gov/NCHS/AH-Provisional-COVID-19-Death-Counts-by-Quarter-an/dnhi-s2bf>
+    <https://wonder.cdc.gov/mcd-icd10-provisional.html>
 
-    These public domain all-cause and COVID-19 mortality data were
-    obtained for 2020-2021 and compared to estimated expected deaths to
-    calculate excess deaths.
+    Example query:
+    <https://wonder.cdc.gov/controller/saved/D176/D273F449>
 
-    Note: Values for county-quarters with fewer than 9 deaths are
+    These public-use provisional and partial mortality data were
+    obtained for 2021 and and compared to estimated expected deaths to
+    calculate excess deaths. Because these data have an unusual and
+    specific license, they are not included as part of the repository,
+    but can be freely downloaded from
+    <https://wonder.cdc.gov/ucd-icd10.html>.
+
+    Note: Values for county-months with fewer than 10 deaths are
     suppressed in these data.
 
 -   US Census Population Estimates
 
-    Population estimates for 2015-2020 were retrieved from the [US
+    Population estimates for 2011-2020 were retrieved from the [US
     Census Bureau Population
     Estimates](https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2020-evaluation-estimates/2010s-counties-total.html),
     because these data are not yet included in the Census Bureau Data
@@ -65,7 +74,7 @@ The excess deaths model used began as an adaptation of *The Economist*’s
 model](https://github.com/TheEconomist/covid-19-excess-deaths-tracker),
 but has since diverged. For details on model selection and performance,
 see
-[`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
+[`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/README.md).
 
 Given the large number of counties in the United States (over 3000), a
 linear mixed model with county, county set, and census division as
@@ -77,9 +86,9 @@ More precisely, **total deaths per day** was regressed on:
 
 -   county population (z-scored)
 
--   years since 2015
+-   years since 2011
 
--   quarter of the year (fixed grouping factor)
+-   month of the year (fixed grouping factor)
 
 -   county (random grouping factor nested within county set)
 
@@ -92,28 +101,29 @@ This model can be expressed by the equation:
 <img src="README_files/equation-1.png" width="702" />
 
 The model object is available at
-[`/blob/main/results/united_states_county_quarterly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_model.RDS).
+[`/blob/main/results/united_states_county_monthly_model.RDS`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_model.RDS).
 
 The model estimates for each observation, including fitted values and
 residuals, are available at
-[`/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_fitted_deaths_per_day_estimate.csv).
+[`/blob/main/results/united_states_county_monthly_fitted_deaths_per_day_estimate.csv`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_fitted_deaths_per_day_estimate.csv).
 Note that these estimates are only y-hat directly from the initial
 model, **not** predicted values on the full dataset, which are
 [available
-here](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/united_states_county_quarterly_excess_deaths_estimates.csv)..
+here](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/united_states_county_monthly_excess_deaths_estimates.csv)..
 
 # Model Performance
 
 For more details on model selection and performance, see
-[`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-quarterly-excess-deaths/blob/main/results/README.md).
+[`/blob/main/results/README.md`](https://github.com/mymil/covid-19-united-states-county-monthly-excess-deaths/blob/main/results/README.md).
 
 Because the COVID-19 pandemic only began in the United States partway
 through March, 2020, we can evaluate model performance by examining
-concordance of predicted and observed deaths in Q1 2020.
+concordance of predicted and observed deaths in the counties that were
+unaffected by COVID-19 in March, 2020.
 
-Observed and expected deaths in Q1 2020 are highly correlated, r =
+Observed and expected deaths in March, 2020 are highly correlated, r =
 0.998. As can be seen from the following scatterplot, total deaths
-(x-axis) tended to exceed expected deaths (y-axis). Unsurprisingly, some
+(y-axis) tended to exceed expected deaths (x-axis). Unsurprisingly, some
 of the counties that were hardest hit early in the pandemic are among
 those with total deaths that most diverge from expected deaths.
 

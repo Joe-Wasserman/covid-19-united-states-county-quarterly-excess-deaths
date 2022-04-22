@@ -17,12 +17,19 @@ library(lme4)
 # NOTE: County-quarters with < 10 deaths are censored in these data
 united_states_county_monthly_total_deaths <- list.files(
   file.path(here::here(), "data"),
-  pattern = "*.txt",
+  pattern = "^All.*",
   full.names = TRUE
 ) %>%
   map_dfr(
     ~ data.table::fread(
       .x,
+      header = FALSE,
+      skip = 1,
+      col.names = c(
+        "Notes", "Year", "Year Code", "Month", "Month Code",
+        "State", "State Code", "County", "County Code",
+        "Deaths", "Population", "Crude Rate"
+      ),
       na.strings = c("Missing", "Suppressed", "Not Applicable"),
       keepLeadingZeros = TRUE,
       colClasses = c("character")
@@ -197,24 +204,38 @@ county_sets_clean <- county_sets %>%
   ) %>%
   tidyr::fill(county_set_code, .direction = "down")
 
-# Summarize historical county-month deaths by county-quarter
+# Format and create additional variables for county-monthly dataset
 # NOTE: Missing and censored values are not replaced
-united_states_county_quarterly_total_deaths <- united_states_county_monthly_total_deaths %>%
+united_states_county_monthly_total_deaths_clean <- united_states_county_monthly_total_deaths %>%
   transmute(
     country = "United States",
     region_code = `County Code`,
-    year = as.integer(Year),
+    year = as.integer(`Year Code`),
     quarter = quarter(ym(`Month Code`)),
-    start_date = yq(paste(year, quarter, sep = "-")),
-    end_date = ceiling_date(start_date + months(2), unit = "month") - 1,
+    month = month(ym(`Month Code`)),
+    start_date = ym(paste(year, month, sep = "-")),
+    end_date = ceiling_date(start_date, unit = "month") - 1,
     days = as.integer(end_date - start_date + 1),
     total_deaths = as.integer(Deaths)
   ) %>%
+  dplyr::select(
+    country, region_code, start_date, end_date, days, year,
+    quarter, month, total_deaths
+  )
+
+# Summarize historical county-month deaths by county-quarter
+# NOTE: Missing and censored values are not replaced
+# Quarters that include months with missing values are treated as missing
+united_states_county_quarterly_total_deaths <- united_states_county_monthly_total_deaths_clean %>%
+  mutate(
+    start_date = yq(paste(year, quarter, sep = "-")),
+    end_date = ceiling_date(start_date + months(2), unit = "month") - 1
+  ) %>%
   group_by(
-    country, region_code, year, quarter, start_date, end_date, days
+    country, region_code, year, quarter, start_date, end_date
   ) %>%
   summarise(
-    total_deaths = sum(total_deaths),
+    across(c(total_deaths, days), sum),
     .groups = "drop"
   ) %>%
   dplyr::select(
@@ -246,9 +267,51 @@ united_states_county_quarterly_covid_deaths_clean <- united_states_county_quarte
     .groups = "drop"
   )
 
+# Limit county-monthly total deaths to 50 states + Washington DC
+# Adds geographic information
+# Prepares variables for modeling
+# NOTE: monthly deaths data includes records for counties that no longer exist and their replacements
+united_states_county_monthly_deaths <- united_states_county_monthly_total_deaths_clean %>%
+  mutate(state_code = str_sub(region_code, end = 2)) %>%
+  semi_join(states_50, by = "state_code") %>%
+  inner_join(
+    united_states_county_yearly_population_complete,
+    by = c("country", "region_code", "year")
+  ) %>%
+  left_join(
+    county_names,
+    by = "region_code"
+  ) %>%
+  left_join(
+    county_sets_clean,
+    by = "region_code"
+  ) %>%
+  left_join(
+    census_division,
+    by = "state"
+  ) %>%
+  mutate(
+    total_deaths_per_day = total_deaths / days,
+    population_z = (population - mean(population, na.rm = TRUE)) /
+      sd(population, na.rm = (TRUE)),
+    across(
+      c(region_code, county_set_code, census_division, census_region, quarter, month),
+      as_factor
+    )
+  ) %>%
+  dplyr::select(
+    country, state, region, region_code,
+    county_set_code, census_division, census_region,
+    start_date, end_date, days, year, quarter, month,
+    population, population_z,
+    total_deaths, total_deaths_per_day
+  )
+
 # Union historical county-quarterly total deaths and
 # 2020-2021 county-quarterly total and covid deaths
 # Limits data to 50 states + Washington DC
+# Adds geographic information
+# Prepares variables for modeling
 united_states_county_quarterly_deaths <- united_states_county_quarterly_total_deaths %>%
   bind_rows(united_states_county_quarterly_covid_deaths_clean) %>%
   mutate(state_code = str_sub(region_code, end = 2)) %>%
@@ -287,25 +350,28 @@ united_states_county_quarterly_deaths <- united_states_county_quarterly_total_de
     total_deaths, covid_deaths, total_deaths_per_day
   )
 
-# subset total data to pre-2020 training dataset for icc
+# subset total data to pre-pandemic training dataset for icc
 # NOTE: full dataset used for estimate_excess_deaths(): internally filters by date
-training_data <- filter(united_states_county_quarterly_deaths, year < 2020L)
+training_data <- filter(
+  united_states_county_monthly_deaths,
+  end_date < ymd("2020-03-01")
+)
 
 ## ---- icc ----
 # Examine ICC 2015-2019 data for alternative nesting structures
 icc <- list(
-  c("region_code", "quarter"),
-  c("region_code", "county_set_code", "quarter"),
-  c("region_code", "census_division", "quarter"),
-  c("region_code", "census_region", "quarter"),
-  c("region_code", "county_set_code", "census_division", "quarter"),
-  c("region_code", "county_set_code", "census_region", "quarter"),
-  c("region_code", "state", "quarter"),
-  c("region_code", "county_set_code", "state", "quarter"),
-  c("region_code", "state", "census_division", "quarter"),
-  c("region_code", "state", "census_region", "quarter"),
-  c("region_code", "county_set_code", "state", "census_division", "quarter"),
-  c("region_code", "county_set_code", "state", "census_region", "quarter")
+  # c("region_code", "month"),
+  c("region_code", "county_set_code", "month"),
+  # c("region_code", "census_division", "month"),
+  # c("region_code", "census_region", "month"),
+  c("region_code", "county_set_code", "census_division", "month"),
+  c("region_code", "county_set_code", "census_region", "month"),
+  # c("region_code", "state", "month"),
+  c("region_code", "county_set_code", "state", "month"),
+  c("region_code", "state", "census_division", "month"),
+  c("region_code", "state", "census_region", "month"),
+  c("region_code", "county_set_code", "state", "census_division", "month"),
+  c("region_code", "county_set_code", "state", "census_region", "month")
 ) %>%
   furrr::future_map(
     .,
@@ -329,55 +395,55 @@ strictControl <- lmerControl(optCtrl = list(
 # NOTE: lme4::lmer() does not require nested random grouping factor syntax
 lmm_formulas <- list(
   # 1
-  as.formula(
-    glue::glue(
-      "total_deaths_per_day ~ 1 +
-      population_z +
-      year_zero +
-      quarter +
-      (1 | region_code)"
-    )
-  ),
+  # as.formula(
+  #   glue::glue(
+  #     "total_deaths_per_day ~ 1 +
+  #     population_z +
+  #     year_zero +
+  #     month +
+  #     (1 | region_code)"
+  #   )
+  # ),
   # 2
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code)"
     )
   ),
   # 3
-  as.formula(
-    glue::glue(
-      "total_deaths_per_day ~ 1 +
-      population_z +
-      year_zero +
-      quarter +
-      (1 | region_code) +
-      (1 | census_division)"
-    )
-  ),
+  # as.formula(
+  #   glue::glue(
+  #     "total_deaths_per_day ~ 1 +
+  #     population_z +
+  #     year_zero +
+  #     month +
+  #     (1 | region_code) +
+  #     (1 | census_division)"
+  #   )
+  # ),
   # 4
-  as.formula(
-    glue::glue(
-      "total_deaths_per_day ~ 1 +
-      population_z +
-      year_zero +
-      quarter +
-      (1 | region_code) +
-      (1 | census_region)"
-    )
-  ),
+  # as.formula(
+  #   glue::glue(
+  #     "total_deaths_per_day ~ 1 +
+  #     population_z +
+  #     year_zero +
+  #     month +
+  #     (1 | region_code) +
+  #     (1 | census_region)"
+  #   )
+  # ),
   # 5
   as.formula(
     glue::glue(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | census_division)"
@@ -389,7 +455,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | census_region)"
@@ -401,7 +467,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | state)"
     )
@@ -412,7 +478,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | state)"
@@ -424,7 +490,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | state) +
       (1 | census_division)"
@@ -436,7 +502,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | state) +
       (1 | census_region)"
@@ -448,7 +514,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | state) +
@@ -461,7 +527,7 @@ lmm_formulas <- list(
       "total_deaths_per_day ~ 1 +
       population_z +
       year_zero +
-      quarter +
+      month +
       (1 | region_code) +
       (1 | county_set_code) +
       (1 | state) +
@@ -475,9 +541,9 @@ model_out <- lmm_formulas %>%
   furrr::future_map(
     .,
     ~ estimate_excess_deaths(
-      df = united_states_county_quarterly_deaths,
+      df = united_states_county_monthly_deaths,
       expected_deaths_formula = .x,
-      period = "quarter",
+      period = "month",
       train_model = TRUE
     )
   )
@@ -502,7 +568,7 @@ expected_deaths <- model_out %>%
 model_mse <- expected_deaths %>%
   imap_dfr(
     ~ .x %>%
-      filter(year == 2020L, quarter == "1") %>%
+      filter(year == 2020L, month == "3") %>%
       summarise(
         model = .y,
         mse = mean(
@@ -528,7 +594,7 @@ model_volatility <- expected_deaths %>%
         fitted_list = map(data, deframe),
         fitted_ts = map(
           fitted_list,
-          ~ as.ts(.x, start = c(2015, 1), frequency = 4)
+          ~ as.ts(.x, start = c(2011, 1), frequency = 12)
         ),
         fitted_outliers = map(
           fitted_ts,
@@ -591,36 +657,36 @@ fitted_outlier_plots <- data_fitted_outliers_only %>%
 
 ## ---- final-model ----
 
-united_states_county_quarterly_results <- model_out[[8]]
+united_states_county_monthly_results <- model_out[[5]]
 
 # export the final selected model
 
-model_out_path <- file.path(here::here(), "results/united_states_county_quarterly_model.RDS")
+model_out_path <- file.path(here::here(), "results/united_states_county_monthly_model.RDS")
 
 if (file.exists(model_out_path)) file.remove(model_out_path)
 
 # export model object
-saveRDS(united_states_county_quarterly_results[[1]], model_out_path)
+saveRDS(united_states_county_monthly_results[[1]], model_out_path)
 
 # export predicted values
 
-results_out_path <- file.path(here::here(), "results/united_states_county_quarterly_excess_deaths_estimates.csv")
+results_out_path <- file.path(here::here(), "results/united_states_county_monthly_excess_deaths_estimates.csv")
 
 if (file.exists(results_out_path)) file.remove(results_out_path)
 
 data.table::fwrite(
-  united_states_county_quarterly_results[[2]],
+  united_states_county_monthly_results[[2]],
   results_out_path,
   append = FALSE
 )
 
 # export model-fitted values from training data
-fitted_out_path <- file.path(here::here(), "results/united_states_county_quarterly_fitted_deaths_per_day_estimates.csv")
+fitted_out_path <- file.path(here::here(), "results/united_states_county_monthly_fitted_deaths_per_day_estimates.csv")
 
 if (file.exists(fitted_out_path)) file.remove(fitted_out_path)
 
 data.table::fwrite(
-  united_states_county_quarterly_results[[3]],
+  united_states_county_monthly_results[[3]],
   fitted_out_path,
   append = FALSE
 )

@@ -2,8 +2,12 @@ $$
 \begin{aligned}
   \operatorname{Total\ Deaths\ per\ Day}_{i}  &\sim N \left(\mu, \sigma^2 \right) \\
     \mu &=\alpha_{j[i],k[i],l[i]} + \beta_{1}(\operatorname{County\ Population\ (z-score)})\ + \\
-&\quad \beta_{2}(\operatorname{Years\ since\ 2015}) + \beta_{3}(\operatorname{Quarter}_{\operatorname{2}})\ + \\
-&\quad \beta_{4}(\operatorname{Quarter}_{\operatorname{3}}) + \beta_{5}(\operatorname{Quarter}_{\operatorname{4}}) \\
+&\quad \beta_{2}(\operatorname{Years\ since\ 2015}) + \beta_{3}(\operatorname{Month}_{\operatorname{2}})\ + \\
+&\quad \beta_{4}(\operatorname{Month}_{\operatorname{3}}) + \beta_{5}(\operatorname{Month}_{\operatorname{4}})\ + \\
+&\quad \beta_{6}(\operatorname{Month}_{\operatorname{5}}) + \beta_{7}(\operatorname{Month}_{\operatorname{6}})\ + \\
+&\quad \beta_{8}(\operatorname{Month}_{\operatorname{7}}) + \beta_{9}(\operatorname{Month}_{\operatorname{8}})\ + \\
+&\quad \beta_{10}(\operatorname{Month}_{\operatorname{9}}) + \beta_{11}(\operatorname{Month}_{\operatorname{10}})\ + \\
+&\quad \beta_{12}(\operatorname{Month}_{\operatorname{11}}) + \beta_{13}(\operatorname{Month}_{\operatorname{12}}) \\
     \alpha_{j}  &\sim N \left(\mu_{\alpha_{j}}, \sigma^2_{\alpha_{j}} \right)
     \text{, for region\_code j = 1,} \dots \text{,J} \\
     \alpha_{k}  &\sim N \left(\mu_{\alpha_{k}}, \sigma^2_{\alpha_{k}} \right)
