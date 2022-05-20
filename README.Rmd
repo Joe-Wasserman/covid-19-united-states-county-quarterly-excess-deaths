@@ -38,14 +38,16 @@ options(
 lmer_model <- readRDS(
   file = file.path(
     here::here(),
-    "results/united_states_county_monthly_model.RDS"
+    "results",
+    "united_states_county_monthly_model.RDS"
   )
 )
 
 united_states_county_monthly_excess_deaths_estimates <- data.table::fread(
   file.path(
     here::here(),
-    "results/united_states_county_monthly_excess_deaths_estimates.csv"
+    "results",
+    "united_states_county_monthly_excess_deaths_estimates.csv"
   ),
   keepLeadingZeros = TRUE
 )

@@ -54,7 +54,8 @@ if (!exists("united_states_county_quarterly_covid_deaths")) {
   united_states_county_quarterly_covid_deaths <- data.table::fread(
     file.path(
       here::here(),
-      "data/united_states_county_quarterly_covid_deaths.csv"
+      "data",
+      "united_states_county_quarterly_covid_deaths.csv"
     ),
     keepLeadingZeros = TRUE
   )
@@ -64,7 +65,8 @@ data.table::fwrite(
   united_states_county_quarterly_covid_deaths,
   file.path(
     here::here(),
-    "data/united_states_county_quarterly_covid_deaths.csv"
+    "data",
+    "united_states_county_quarterly_covid_deaths.csv"
   )
 )
 
@@ -74,7 +76,8 @@ try(
   county_sets <- data.table::fread(
     file.path(
       here::here(),
-      "data/county_sets.csv"
+      "data",
+      "county_sets.csv"
     ),
     keepLeadingZeros = TRUE
   )
@@ -98,7 +101,8 @@ data.table::fwrite(
   county_sets,
   file.path(
     here::here(),
-    "data/county_sets.csv"
+    "data",
+    "county_sets.csv"
   )
 )
 
@@ -121,7 +125,8 @@ try(
   united_states_county_yearly_population_2020 <- data.table::fread(
     file.path(
       here::here(),
-      "data/united_states_county_yearly_population_2020.csv"
+      "data",
+      "united_states_county_yearly_population_2020.csv"
     ),
     keepLeadingZeros = TRUE
   )
@@ -139,7 +144,8 @@ data.table::fwrite(
   united_states_county_yearly_population_2020,
   file.path(
     here::here(),
-    "data/united_states_county_yearly_population_2020.csv"
+    "data".
+    "united_states_county_yearly_population_2020.csv"
   )
 )
 
@@ -754,14 +760,14 @@ united_states_county_monthly_model <- model_out[[final_model]]
 united_states_county_monthly_results <- expected_and_excess_deaths[[final_model]]
 
 # export the final selected model object
-model_out_path <- file.path(here::here(), "results/united_states_county_monthly_model.RDS")
+model_out_path <- file.path(here::here(), "results", "united_states_county_monthly_model.RDS")
 
 if (file.exists(model_out_path)) file.remove(model_out_path)
 
 saveRDS(united_states_county_monthly_model[[1]], model_out_path)
 
 # export expected deaths and estimated excess deaths
-results_out_path <- file.path(here::here(), "results/united_states_county_monthly_excess_deaths_estimates.csv")
+results_out_path <- file.path(here::here(), "results", "united_states_county_monthly_excess_deaths_estimates.csv")
 
 if (file.exists(results_out_path)) file.remove(results_out_path)
 
@@ -772,7 +778,7 @@ data.table::fwrite(
 )
 
 # export model-fitted values from trained model
-fitted_out_path <- file.path(here::here(), "results/united_states_county_monthly_fitted_deaths_per_day_estimates.csv")
+fitted_out_path <- file.path(here::here(), "results", "united_states_county_monthly_fitted_deaths_per_day_estimates.csv")
 
 if (file.exists(fitted_out_path)) file.remove(fitted_out_path)
 
